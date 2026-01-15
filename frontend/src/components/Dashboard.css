@@ -1,0 +1,204 @@
+.dashboard {
+  min-height: 100vh;
+  background: #1a1a1a;
+}
+
+.dashboard-header {
+  background: #2a2a3e;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.dashboard-header h1 {
+  color: #fff;
+  font-size: 1.8rem;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-secondary,
+.btn-logout {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.3s;
+}
+
+.btn-secondary {
+  background: #3a3a5e;
+  color: #fff;
+}
+
+.btn-secondary:hover {
+  background: #4a4a6e;
+}
+
+.btn-logout {
+  background: #d32f2f;
+  color: #fff;
+}
+
+.btn-logout:hover {
+  background: #c62828;
+}
+
+.dashboard-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 30px 20px;
+}
+
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.stat-card {
+  background: #2a2a3e;
+  padding: 25px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.stat-value {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #4caf50;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  color: #b0b0b0;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.instances-list h2 {
+  color: #fff;
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+}
+
+.instance-card {
+  background: #2a2a3e;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s;
+}
+
+.instance-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.instance-card.visited {
+  border-left: 4px solid #4caf50;
+  opacity: 0.8;
+}
+
+.instance-info {
+  flex: 1;
+}
+
+.instance-info h3 {
+  color: #fff;
+  margin-bottom: 8px;
+  font-size: 1.2rem;
+}
+
+.boss-name {
+  color: #ff9800;
+  margin: 5px 0;
+  font-weight: 500;
+}
+
+.level {
+  color: #2196f3;
+  margin: 5px 0;
+  font-size: 0.9rem;
+}
+
+.description {
+  color: #b0b0b0;
+  margin-top: 8px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.btn-visit {
+  padding: 12px 24px;
+  border: 2px solid #4caf50;
+  background: transparent;
+  color: #4caf50;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.btn-visit:hover:not(:disabled) {
+  background: #4caf50;
+  color: #fff;
+}
+
+.btn-visit.visited {
+  border-color: #4caf50;
+  background: #4caf50;
+  color: #fff;
+}
+
+.btn-visit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .instance-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .btn-visit {
+    width: 100%;
+  }
+
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dashboard-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
