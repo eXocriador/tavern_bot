@@ -1,6 +1,31 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+
+export interface Visit {
+  _id: string;
+  zoneId: {
+    _id: string;
+    zoneId: string;
+    name: string;
+    bossName?: string;
+    level?: number;
+  };
+  visitedAt: string;
+  periodId: string;
+}
+
+export interface ZoneStat {
+  _id: string;
+  zoneId: {
+    _id: string;
+    zoneId: string;
+    name: string;
+    bossName?: string;
+  };
+  totalVisits: number;
+  lastVisited?: string;
+}
 
 export interface UserStatistics {
   currentPeriod: {
@@ -8,12 +33,40 @@ export interface UserStatistics {
     available: number;
     total: number;
     completionRate: number;
-    visits: any[];
+    visits: Visit[];
   };
   allTime: {
     totalVisits: number;
-    zoneStats: any[];
-    mostVisited: any[];
+    zoneStats: ZoneStat[];
+    mostVisited: ZoneStat[];
+  };
+}
+
+export interface UserInfo {
+  telegramId: number;
+  username?: string;
+  characterName?: string;
+}
+
+export interface GlobalStatistics {
+  currentPeriod: {
+    totalVisits: number;
+    activeUsers: number;
+    totalUsers: number;
+    averageVisitsPerUser: number;
+    zonePopularity: Array<{
+      zoneId: string;
+      name: string;
+      visits: number;
+    }>;
+  };
+  allTime: {
+    totalVisits: number;
+    mostPopularZones: Array<{
+      zoneId: string;
+      name: string;
+      visits: number;
+    }>;
   };
 }
 
@@ -22,12 +75,14 @@ export const getMyStatistics = async (): Promise<UserStatistics> => {
   return response.data;
 };
 
-export const getUserStatistics = async (telegramId: number): Promise<UserStatistics & { user: any }> => {
+export const getUserStatistics = async (
+  telegramId: number
+): Promise<UserStatistics & { user: UserInfo }> => {
   const response = await axios.get(`${API_URL}/statistics/user/${telegramId}`);
   return response.data;
 };
 
-export const getGlobalStatistics = async () => {
+export const getGlobalStatistics = async (): Promise<GlobalStatistics> => {
   const response = await axios.get(`${API_URL}/statistics/global`);
   return response.data;
 };

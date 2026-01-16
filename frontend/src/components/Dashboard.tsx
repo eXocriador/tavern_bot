@@ -45,10 +45,13 @@ const Dashboard = () => {
         const newVisit = await markVisit(zoneId);
         setVisits([...visits, newVisit]);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error toggling visit:', error);
-      const message = error.response?.data?.error || 'Помилка оновлення';
-      alert(message);
+      const message =
+        error instanceof Error && 'response' in error
+          ? (error as { response?: { data?: { error?: string } } }).response?.data?.error
+          : 'Помилка оновлення';
+      alert(message || 'Помилка оновлення');
     } finally {
       setUpdating(null);
     }

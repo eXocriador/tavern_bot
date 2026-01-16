@@ -5,7 +5,7 @@ import axios from 'axios';
 dotenv.config();
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
-const apiUrl = process.env.API_URL || 'http://localhost:5000/api';
+const apiUrl = process.env.API_URL || 'http://localhost:5001/api';
 
 if (!token) {
   console.error('❌ TELEGRAM_BOT_TOKEN not found in environment variables');

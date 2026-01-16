@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getProfile, updateProfile } from '../api/profile';
+import { getProfile, updateProfile, Profile as ProfileType } from '../api/profile';
 import './Profile.css';
 
 const Profile = () => {
   const { user, updateUser, logout } = useAuth();
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<ProfileType | null>(null);
   const [characterName, setCharacterName] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

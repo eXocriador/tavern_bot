@@ -5,13 +5,14 @@ import {
   getMyStatistics,
   getGlobalStatistics,
   UserStatistics,
+  GlobalStatistics,
 } from '../api/statistics';
 import './Statistics.css';
 
 const Statistics = () => {
   const { user, logout } = useAuth();
   const [myStats, setMyStats] = useState<UserStatistics | null>(null);
-  const [globalStats, setGlobalStats] = useState<any>(null);
+  const [globalStats, setGlobalStats] = useState<GlobalStatistics | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'personal' | 'global'>('personal');
 

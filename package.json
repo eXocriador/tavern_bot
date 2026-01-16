@@ -2,6 +2,7 @@
   "name": "tavern-bot",
   "version": "1.0.0",
   "description": "Lineage 2 instance zone tracker for Telegram chat",
+  "license": "MIT",
   "private": true,
   "workspaces": [
     "backend",
@@ -9,10 +10,10 @@
     "telegram-bot"
   ],
   "scripts": {
-    "dev": "concurrently \"npm run dev --workspace=backend\" \"npm run dev --workspace=frontend\"",
-    "install:all": "npm install && npm install --workspace=backend && npm install --workspace=frontend && npm install --workspace=telegram-bot"
+    "dev": "concurrently \"yarn workspace tavern-bot-backend dev\" \"yarn workspace tavern-bot-frontend dev\"",
+    "install:all": "yarn install"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^9.2.1"
   }
 }
