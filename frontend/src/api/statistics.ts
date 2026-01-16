@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+import apiClient from './axiosConfig';
 
 export interface Visit {
   _id: string;
@@ -71,24 +69,24 @@ export interface GlobalStatistics {
 }
 
 export const getMyStatistics = async (): Promise<UserStatistics> => {
-  const response = await axios.get(`${API_URL}/statistics/me`);
+  const response = await apiClient.get('/statistics/me');
   return response.data;
 };
 
 export const getUserStatistics = async (
   telegramId: number
 ): Promise<UserStatistics & { user: UserInfo }> => {
-  const response = await axios.get(`${API_URL}/statistics/user/${telegramId}`);
+  const response = await apiClient.get(`/statistics/user/${telegramId}`);
   return response.data;
 };
 
 export const getGlobalStatistics = async (): Promise<GlobalStatistics> => {
-  const response = await axios.get(`${API_URL}/statistics/global`);
+  const response = await apiClient.get('/statistics/global');
   return response.data;
 };
 
 export const getZoneStatistics = async (zoneId: string) => {
-  const response = await axios.get(`${API_URL}/statistics/zone/${zoneId}`);
+  const response = await apiClient.get(`/statistics/zone/${zoneId}`);
   return response.data;
 };
 

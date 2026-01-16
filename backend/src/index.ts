@@ -9,6 +9,7 @@ import visitRoutes from './routes/visits';
 import profileRoutes from './routes/profile';
 import statisticsRoutes from './routes/statistics';
 import botRoutes from './routes/bot';
+import { devAuth } from './middleware/auth';
 
 dotenv.config();
 
@@ -18,6 +19,8 @@ const PORT = process.env.PORT || 5001;
 // Middleware
 app.use(cors());
 app.use(express.json());
+// Dev auth middleware (only in development)
+app.use(devAuth);
 
 // Connect to MongoDB
 mongoose

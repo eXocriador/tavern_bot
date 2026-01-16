@@ -1,6 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import LanguageSwitcher from './LanguageSwitcher';
 import './Login.css';
 
 declare global {
@@ -11,8 +14,11 @@ declare global {
 
 const Login = () => {
   const { login, user } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const botName = import.meta.env.VITE_TELEGRAM_BOT_NAME || 'your_bot_username';
+  const [telegramId, setTelegramId] = useState('');
+  const [useDevMode, setUseDevMode] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -21,6 +27,8 @@ const Login = () => {
   }, [user, navigate]);
 
   useEffect(() => {
+    if (useDevMode) return; // Skip widget loading in dev mode
+
     // Telegram Login Widget callback
     window.onTelegramAuth = async (user: any) => {
       try {
@@ -28,7 +36,7 @@ const Login = () => {
         navigate('/');
       } catch (error) {
         console.error('Login failed:', error);
-        alert('Помилка авторизації. Спробуйте ще раз.');
+        alert(t('login.error'));
       }
     };
 
@@ -51,16 +59,88 @@ const Login = () => {
         container.removeChild(script);
       }
     };
-  }, [login, navigate, botName]);
+  }, [login, navigate, botName, useDevMode]);
+
+  const handleDevLogin = async () => {
+    if (!telegramId || isNaN(Number(telegramId))) {
+      alert(t('login.checkId'));
+      return;
+    }
+
+    try {
+      // For dev mode, always use local API (not ngrok URL)
+      const API_URL = '/api'; // Use relative path to leverage Vite proxy
+      const response = await axios.post(`${API_URL}/auth/dev`, {
+        id: Number(telegramId),
+        username: `dev_${telegramId}`,
+        first_name: 'Dev',
+      }, {
+        headers: {
+          'x-telegram-id': telegramId.toString(),
+        },
+      });
+
+      if (response.data.success && response.data.user) {
+        const userData = response.data.user;
+        // Manually set user and reload to update auth state
+        localStorage.setItem('user', JSON.stringify(userData));
+        window.location.href = '/'; // Force reload to update auth state
+      } else {
+        throw new Error('Invalid response from server');
+      }
+    } catch (error: any) {
+      console.error('Dev login failed:', error);
+      const errorMessage = error.response?.data?.error || error.message || t('common.error');
+      alert(`${t('login.error')}: ${errorMessage}`);
+    }
+  };
 
   return (
     <div className="login-container">
       <div className="login-card">
-        <h1>Tavern Bot</h1>
-        <p className="subtitle">Відстеження інстанс-зон Lineage 2</p>
-        <div id="telegram-login-container"></div>
+        <div style={{ position: 'absolute', top: '20px', right: '20px' }}>
+          <LanguageSwitcher />
+        </div>
+        <h1>{t('login.title')}</h1>
+        <p className="subtitle">{t('login.subtitle')}</p>
+
+        {useDevMode ? (
+          <div className="dev-login">
+            <input
+              type="text"
+              placeholder={t('login.devInputPlaceholder')}
+              value={telegramId}
+              onChange={(e) => setTelegramId(e.target.value)}
+              className="dev-input"
+            />
+            <button onClick={handleDevLogin} className="dev-button">
+              {t('login.devButton')}
+            </button>
+            <button
+              onClick={() => setUseDevMode(false)}
+              className="dev-toggle"
+            >
+              {t('login.returnToTelegram')}
+            </button>
+            <p className="dev-hint">
+              {t('login.devHint')}
+            </p>
+          </div>
+        ) : (
+          <>
+            <div id="telegram-login-container"></div>
+            <button
+              onClick={() => setUseDevMode(true)}
+              className="dev-toggle"
+              style={{ marginTop: '15px', background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', textDecoration: 'underline' }}
+            >
+              {t('login.devMode')}
+            </button>
+          </>
+        )}
+
         <p className="hint">
-          Увійдіть через Telegram, щоб почати відстежувати свої проходження інстансів
+          {t('login.hint')}
         </p>
       </div>
     </div>

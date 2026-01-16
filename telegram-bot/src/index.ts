@@ -1,6 +1,6 @@
-import TelegramBot from 'node-telegram-bot-api';
-import dotenv from 'dotenv';
 import axios from 'axios';
+import dotenv from 'dotenv';
+import TelegramBot from 'node-telegram-bot-api';
 
 dotenv.config();
 
@@ -35,7 +35,7 @@ const apiRequest = async (method: string, endpoint: string, data?: any) => {
 };
 
 // Start command
-bot.onText(/\/start/, async (msg) => {
+bot.onText(/\/start/, async msg => {
   const chatId = msg.chat.id;
   const welcomeMessage = `
 👋 Вітаю! Я Tavern Bot - помічник для відстеження інстанс-зон Lineage 2.
@@ -54,7 +54,12 @@ bot.onText(/\/start/, async (msg) => {
 });
 
 // Helper function to ensure user exists
-const ensureUserExists = async (telegramId: number, username?: string, firstName?: string, lastName?: string) => {
+const ensureUserExists = async (
+  telegramId: number,
+  username?: string,
+  firstName?: string,
+  lastName?: string
+) => {
   try {
     await apiRequest('POST', '/bot/ensure-user', {
       telegramId,
@@ -74,7 +79,7 @@ bot.onText(/\/iz(?:\s+@(\w+))?/, async (msg, match) => {
   const targetUsername = match?.[1];
 
   try {
-    let telegramId = msg.from?.id;
+    const telegramId = msg.from?.id;
 
     // Ensure user exists
     if (msg.from) {
@@ -227,9 +232,8 @@ bot.onText(/\/stats(?:\s+@(\w+))?/, async (msg, match) => {
 });
 
 // Error handling
-bot.on('polling_error', (error) => {
+bot.on('polling_error', error => {
   console.error('Polling error:', error);
 });
 
 console.log('🤖 Telegram bot is running...');
-

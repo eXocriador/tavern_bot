@@ -14,12 +14,13 @@
     "format:check": "prettier --check \"src/**/*.ts\""
   },
   "dependencies": {
-    "node-telegram-bot-api": "^0.67.0",
     "axios": "^1.7.9",
-    "dotenv": "^16.6.1"
+    "dotenv": "^16.6.1",
+    "node-telegram-bot-api": "^0.67.0"
   },
   "devDependencies": {
     "@types/node": "^20.19.30",
+    "@types/node-telegram-bot-api": "^0.64.13",
     "@typescript-eslint/eslint-plugin": "^8.18.2",
     "@typescript-eslint/parser": "^8.18.2",
     "eslint": "^9.18.0",
@@ -28,4 +29,3 @@
     "typescript": "^5.7.2"
   }
 }
-

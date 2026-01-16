@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import axios from 'axios';
+import apiClient from '../api/axiosConfig';
 
 interface User {
   telegramId: number;
@@ -19,7 +20,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+// Use relative path for local dev (proxied by Vite), or env var for production
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);

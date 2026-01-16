@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+import apiClient from './axiosConfig';
 
 export interface InstanceZone {
   _id: string;
@@ -12,7 +10,7 @@ export interface InstanceZone {
 }
 
 export const getInstances = async (): Promise<InstanceZone[]> => {
-  const response = await axios.get(`${API_URL}/instances`);
+  const response = await apiClient.get('/instances');
   return response.data;
 };
 

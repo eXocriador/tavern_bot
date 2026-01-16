@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import LanguageSwitcher from './LanguageSwitcher';
 import { getInstances, InstanceZone } from '../api/instances';
 import { getMyVisits, markVisit, removeVisit, Visit } from '../api/visits';
 import './Dashboard.css';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
   const [instances, setInstances] = useState<InstanceZone[]>([]);
   const [visits, setVisits] = useState<Visit[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,7 +30,7 @@ const Dashboard = () => {
       setVisits(visitsData);
     } catch (error) {
       console.error('Error loading data:', error);
-      alert('Помилка завантаження даних');
+      alert(t('dashboard.error'));
     } finally {
       setLoading(false);
     }
@@ -50,8 +53,8 @@ const Dashboard = () => {
       const message =
         error instanceof Error && 'response' in error
           ? (error as { response?: { data?: { error?: string } } }).response?.data?.error
-          : 'Помилка оновлення';
-      alert(message || 'Помилка оновлення');
+          : t('common.error');
+      alert(message || t('common.error'));
     } finally {
       setUpdating(null);
     }
@@ -60,23 +63,24 @@ const Dashboard = () => {
   const visitedZoneIds = new Set(visits.map((v) => v.zoneId.zoneId));
 
   if (loading) {
-    return <div className="loading">Завантаження...</div>;
+    return <div className="loading">{t('common.loading')}</div>;
   }
 
   return (
     <div className="dashboard">
       <header className="dashboard-header">
         <div className="header-content">
-          <h1>Tavern Bot</h1>
+          <h1>{t('dashboard.title')}</h1>
           <div className="header-actions">
+            <LanguageSwitcher />
             <Link to="/profile" className="btn-secondary">
-              Профіль
+              {t('dashboard.profile')}
             </Link>
             <Link to="/statistics" className="btn-secondary">
-              Статистика
+              {t('dashboard.statistics')}
             </Link>
             <button onClick={logout} className="btn-logout">
-              Вийти
+              {t('dashboard.logout')}
             </button>
           </div>
         </div>
@@ -86,11 +90,11 @@ const Dashboard = () => {
         <div className="dashboard-stats">
           <div className="stat-card">
             <div className="stat-value">{visits.length}</div>
-            <div className="stat-label">Пройдено</div>
+            <div className="stat-label">{t('dashboard.passed')}</div>
           </div>
           <div className="stat-card">
             <div className="stat-value">{instances.length - visits.length}</div>
-            <div className="stat-label">Доступно</div>
+            <div className="stat-label">{t('dashboard.available')}</div>
           </div>
           <div className="stat-card">
             <div className="stat-value">
@@ -99,12 +103,12 @@ const Dashboard = () => {
                 : 0}
               %
             </div>
-            <div className="stat-label">Прогрес</div>
+            <div className="stat-label">{t('dashboard.progress')}</div>
           </div>
         </div>
 
         <div className="instances-list">
-          <h2>Інстанс-зони</h2>
+          <h2>{t('dashboard.instanceZones')}</h2>
           {instances.map((instance) => {
             const isVisited = visitedZoneIds.has(instance.zoneId);
             const isUpdating = updating === instance.zoneId;
@@ -117,10 +121,10 @@ const Dashboard = () => {
                 <div className="instance-info">
                   <h3>{instance.name}</h3>
                   {instance.bossName && (
-                    <p className="boss-name">Бос: {instance.bossName}</p>
+                    <p className="boss-name">{t('dashboard.boss')}: {instance.bossName}</p>
                   )}
                   {instance.level && (
-                    <p className="level">Рівень: {instance.level}+</p>
+                    <p className="level">{t('dashboard.level')}: {instance.level}+</p>
                   )}
                   {instance.description && (
                     <p className="description">{instance.description}</p>
@@ -134,8 +138,8 @@ const Dashboard = () => {
                   {isUpdating
                     ? '...'
                     : isVisited
-                    ? '✓ Пройдено'
-                    : 'Відмітити'}
+                    ? t('dashboard.visited')
+                    : t('dashboard.mark')}
                 </button>
               </div>
             );

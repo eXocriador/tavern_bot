@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+import apiClient from './axiosConfig';
 
 export interface Profile {
   telegramId: number;
@@ -12,12 +10,12 @@ export interface Profile {
 }
 
 export const getProfile = async (): Promise<Profile> => {
-  const response = await axios.get(`${API_URL}/profile`);
+  const response = await apiClient.get('/profile');
   return response.data;
 };
 
 export const updateProfile = async (characterName: string): Promise<Profile> => {
-  const response = await axios.put(`${API_URL}/profile`, { characterName });
+  const response = await apiClient.put('/profile', { characterName });
   return response.data;
 };
 

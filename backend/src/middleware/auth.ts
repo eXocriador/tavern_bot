@@ -89,6 +89,33 @@ export const verifyTelegramAuth = async (
   }
 };
 
+// Dev mode middleware - reads telegramId from header (only in development)
+export const devAuth = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  if (process.env.NODE_ENV === 'production') {
+    return next();
+  }
+
+  const telegramId = req.headers['x-telegram-id'] || req.query.telegramId;
+  if (telegramId && !req.user) {
+    try {
+      const user = await User.findOne({ telegramId: Number(telegramId) });
+      if (user) {
+        req.user = {
+          telegramId: user.telegramId,
+          _id: user._id.toString(),
+        };
+      }
+    } catch (error) {
+      // Ignore errors in dev mode
+    }
+  }
+  next();
+};
+
 export const requireAuth = async (
   req: AuthRequest,
   res: Response,
