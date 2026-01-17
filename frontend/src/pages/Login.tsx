@@ -98,10 +98,12 @@ const Login = () => {
   return (
     <div className="login-container">
       <div className="login-card">
-        <div style={{ position: 'absolute', top: '20px', right: '20px' }}>
-          <LanguageSwitcher />
+        <div className="login-header">
+          <h1>{t('login.title')}</h1>
+          <div className="login-language-switcher">
+            <LanguageSwitcher />
+          </div>
         </div>
-        <h1>{t('login.title')}</h1>
         <p className="subtitle">{t('login.subtitle')}</p>
 
         {useDevMode ? (
@@ -132,7 +134,6 @@ const Login = () => {
             <button
               onClick={() => setUseDevMode(true)}
               className="dev-toggle"
-              style={{ marginTop: '15px', background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', textDecoration: 'underline' }}
             >
               {t('login.devMode')}
             </button>

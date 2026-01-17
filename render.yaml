@@ -1,0 +1,43 @@
+services:
+  # Backend API Service
+  - type: web
+    name: tavern-bot-backend
+    env: node
+    plan: free
+    # For monorepo: install from root, then build backend
+    buildCommand: yarn install && yarn workspace tavern-bot-backend build
+    startCommand: yarn workspace tavern-bot-backend start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false  # Set this in Render dashboard: mongodb+srv://...
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false  # Set this in Render dashboard
+      - key: TELEGRAM_BOT_USERNAME
+        sync: false  # Set this in Render dashboard
+      - key: TELEGRAM_CHAT_ID
+        sync: false  # Optional, set in Render dashboard if needed
+
+  # Telegram Bot Service
+  - type: worker
+    name: tavern-bot-telegram
+    env: node
+    plan: free
+    # For monorepo: install from root, then build telegram-bot
+    buildCommand: yarn install && yarn workspace tavern-bot-telegram build
+    startCommand: yarn workspace tavern-bot-telegram start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false  # Set this in Render dashboard (same as backend)
+      - key: API_URL
+        fromService:
+          type: web
+          name: tavern-bot-backend
+          property: url
+        # Append /api to the backend URL
+        transform: ${url}/api
