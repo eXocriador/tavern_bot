@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
 import User from '../models/User';
 
@@ -12,7 +12,7 @@ interface TelegramAuthData {
   hash: string;
 }
 
-export interface AuthRequest extends Request {
+export interface AuthRequest extends express.Request {
   user?: {
     telegramId: number;
     _id: string;
