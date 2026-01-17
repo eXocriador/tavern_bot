@@ -49,7 +49,7 @@ const Login = () => {
   useEffect(() => {
     const handleTelegramWebAppAuth = async () => {
       // Check multiple ways to detect Telegram Web App
-      const detectTelegramWebApp = (): typeof window.Telegram.WebApp | null => {
+      const detectTelegramWebApp = (): any => {
         // Method 1: Check window.Telegram.WebApp (official SDK)
         if (window.Telegram?.WebApp) {
           return window.Telegram.WebApp;
@@ -78,7 +78,7 @@ const Login = () => {
       console.log('Checking Telegram Web App:', {
         hasTelegram: !!window.Telegram,
         hasWebApp: !!window.Telegram?.WebApp,
-        initData: window.Telegram?.WebApp?.initData?.substring(0, 50) || 'none',
+        initData: (window.Telegram?.WebApp?.initData || '').substring(0, 50) || 'none',
         userAgent: navigator.userAgent,
       });
 
