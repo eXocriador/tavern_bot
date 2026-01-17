@@ -48,122 +48,100 @@ const Login = () => {
   // Auto-login via Telegram Web App
   useEffect(() => {
     const handleTelegramWebAppAuth = async () => {
-      // Check multiple ways to detect Telegram Web App
-      const detectTelegramWebApp = (): any => {
-        // Method 1: Check window.Telegram.WebApp (official SDK)
-        if (window.Telegram?.WebApp) {
-          return window.Telegram.WebApp;
-        }
-
-        // Method 2: Check if we're in Telegram by looking for initData in URL or window
-        // Telegram sometimes injects initData in different ways
-        const tgWebAppData = (window as any).tgWebAppData;
-        if (tgWebAppData) {
-          // If tgWebAppData exists, we're in Telegram
-          // Return a mock WebApp object
-          return null; // Will handle separately
-        }
-
-        // Method 3: Check user agent (less reliable but can help)
-        const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
-        if (/Telegram/i.test(userAgent)) {
-          // We're in Telegram, but SDK might not be loaded yet
-          return null;
-        }
-
-        return null;
-      };
-
-      // Log for debugging
-      console.log('Checking Telegram Web App:', {
-        hasTelegram: !!window.Telegram,
-        hasWebApp: !!window.Telegram?.WebApp,
-        initData: (window.Telegram?.WebApp?.initData || '').substring(0, 50) || 'none',
-        userAgent: navigator.userAgent,
-      });
-
-      // Try to detect Telegram Web App
-      let webApp = detectTelegramWebApp();
-
-      // If WebApp SDK is available, use it
-      if (webApp) {
-        console.log('Telegram Web App detected, initData:', webApp.initData?.substring(0, 100));
-        setIsTelegramWebApp(true);
-        webApp.ready();
-        webApp.expand();
-
-        // Check if we have initData
-        if (!webApp.initData) {
-          console.log('No initData in Telegram Web App');
-          setIsTelegramWebApp(false);
-          return;
-        }
-
-        const initData = webApp.initDataUnsafe;
-
-        // Check if we have user data
-        if (!initData.user || !initData.user.id) {
-          console.log('No user data in Telegram Web App', initData);
-          setIsTelegramWebApp(false);
-          return;
-        }
-
-        try {
-          const API_URL = import.meta.env.VITE_API_URL || '/api';
-
-          // Send initData string to backend for verification
-          const response = await axios.post(`${API_URL}/auth/webapp`, {
-            initData: webApp.initData, // Send raw initData string for verification
-          });
-
-          if (response.data.success && response.data.user) {
-            const userData = response.data.user;
-            // Update auth context
-            localStorage.setItem('user', JSON.stringify(userData));
-            window.location.href = '/'; // Force reload to update auth state
-          } else {
-            console.error('Telegram Web App auth: Invalid response', response.data);
-            setIsTelegramWebApp(false);
-          }
-        } catch (error: any) {
-          console.error('Telegram Web App auth failed:', error);
-          const errorMessage = error.response?.data?.error || error.message || 'Authentication failed';
-          console.error('Error details:', errorMessage);
-          setIsTelegramWebApp(false);
-          // Show error to user
-          alert(`Помилка авторизації: ${errorMessage}`);
-          // Fall back to regular login widget
-        }
-      } else {
-        // Not in Telegram Web App, or SDK not loaded yet
+      // Check if running inside Telegram Web App
+      if (!window.Telegram?.WebApp) {
         setIsTelegramWebApp(false);
+        return;
+      }
+
+      const webApp = window.Telegram.WebApp;
+
+      // Mark that we're in Telegram Web App immediately to hide login button
+      setIsTelegramWebApp(true);
+
+      // Initialize Telegram Web App
+      webApp.ready();
+      webApp.expand();
+
+      // Check if we have initData
+      if (!webApp.initData) {
+        console.error('Telegram Web App: initData is empty');
+        setIsTelegramWebApp(false);
+        return;
+      }
+
+      const initDataUnsafe = webApp.initDataUnsafe;
+
+      // Check if we have user data
+      if (!initDataUnsafe.user || !initDataUnsafe.user.id) {
+        console.error('Telegram Web App: No user data in initData', initDataUnsafe);
+        setIsTelegramWebApp(false);
+        return;
+      }
+
+      try {
+        const API_URL = import.meta.env.VITE_API_URL || '/api';
+
+        console.log('Telegram Web App: Attempting auto-login...');
+
+        // Send initData string to backend for verification (POST request)
+        const response = await axios.post(`${API_URL}/auth/webapp`, {
+          initData: webApp.initData, // Send raw initData string for verification
+        }, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.data.success && response.data.user) {
+          console.log('Telegram Web App: Auto-login successful');
+          const userData = response.data.user;
+          // Update auth context
+          localStorage.setItem('user', JSON.stringify(userData));
+          window.location.href = '/'; // Force reload to update auth state
+        } else {
+          console.error('Telegram Web App auth: Invalid response', response.data);
+          setIsTelegramWebApp(false);
+        }
+      } catch (error: any) {
+        console.error('Telegram Web App auth failed:', error);
+        const errorMessage = error.response?.data?.error || error.message || 'Authentication failed';
+        const statusCode = error.response?.status;
+
+        console.error('Error details:', {
+          message: errorMessage,
+          status: statusCode,
+          url: error.config?.url,
+          method: error.config?.method,
+        });
+
+        setIsTelegramWebApp(false);
+
+        // Don't show alert immediately - let it fall back to login widget
+        // Only show error if it's not a 405 (which might be temporary)
+        if (statusCode !== 405) {
+          alert(`Помилка авторизації: ${errorMessage}`);
+        }
       }
     };
 
-    // Wait for DOM and SDK to be ready
-    const checkInterval = setInterval(() => {
-      if (document.readyState === 'complete') {
-        handleTelegramWebAppAuth();
-        clearInterval(checkInterval);
-      }
-    }, 50);
-
-    // Also try after delays for SDK loading
-    const timeouts = [
-      setTimeout(handleTelegramWebAppAuth, 100),
-      setTimeout(handleTelegramWebAppAuth, 300),
-      setTimeout(handleTelegramWebAppAuth, 500),
-    ];
+    // Try multiple times with delays to ensure SDK is loaded
+    const attempts = [0, 100, 300, 500, 1000];
+    const timeouts = attempts.map(delay =>
+      setTimeout(handleTelegramWebAppAuth, delay)
+    );
 
     return () => {
-      clearInterval(checkInterval);
       timeouts.forEach(clearTimeout);
     };
   }, []);
 
   useEffect(() => {
     // Don't load widget if we're in Telegram Web App or dev mode
-    if (useDevMode || isTelegramWebApp) return;
+    // Also check directly to avoid race condition
+    if (useDevMode || isTelegramWebApp || window.Telegram?.WebApp) {
+      return;
+    }
 
     // Telegram Login Widget callback
     window.onTelegramAuth = async (user: any) => {
