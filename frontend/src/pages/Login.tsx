@@ -51,11 +51,9 @@ const Login = () => {
       // Wait a bit for Telegram Web App SDK to load
       const checkTelegramWebApp = () => {
         // Check if running inside Telegram Web App
-        const isInTelegram = window.Telegram?.WebApp !== undefined;
-
-        if (!isInTelegram) {
+        if (!window.Telegram?.WebApp) {
           setIsTelegramWebApp(false);
-          return false;
+          return null;
         }
 
         const webApp = window.Telegram.WebApp;
@@ -67,7 +65,7 @@ const Login = () => {
         if (!webApp.initData) {
           console.log('No initData in Telegram Web App');
           setIsTelegramWebApp(false);
-          return false;
+          return null;
         }
 
         const initData = webApp.initDataUnsafe;
@@ -76,18 +74,17 @@ const Login = () => {
         if (!initData.user || !initData.user.id) {
           console.log('No user data in Telegram Web App');
           setIsTelegramWebApp(false);
-          return false;
+          return null;
         }
 
-        return true;
+        return webApp;
       };
 
       // Check immediately
-      if (!checkTelegramWebApp()) {
+      const webApp = checkTelegramWebApp();
+      if (!webApp) {
         return;
       }
-
-      const webApp = window.Telegram.WebApp;
 
       try {
         const API_URL = import.meta.env.VITE_API_URL || '/api';
