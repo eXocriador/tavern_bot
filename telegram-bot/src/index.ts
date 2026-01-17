@@ -185,6 +185,52 @@ bot.onText(/\/iz/, async msg => {
 // Removed commands (can be added later if needed):
 // /chatid, /visit, /remove, /stats, /reset, /global, /top, /zone
 
+// /id command - get Telegram ID with copy button
+bot.onText(/\/id/, async msg => {
+  const chatId = msg.chat.id;
+
+  try {
+    const telegramId = msg.from?.id;
+    if (!telegramId) {
+      bot.sendMessage(chatId, '❌ Ошибка идентификации пользователя.');
+      return;
+    }
+
+    const message = `🆔 Ваш Telegram ID:\n\n\`${telegramId}\`\n\n💡 Нажмите на ID выше, чтобы скопировать его.`;
+
+    bot.sendMessage(chatId, message, {
+      parse_mode: 'Markdown',
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: '📋 Копировать ID',
+              callback_data: `copy_id_${telegramId}`,
+            },
+          ],
+        ],
+      },
+    });
+  } catch (error: any) {
+    console.error('Error in /id command:', error);
+    bot.sendMessage(chatId, '❌ Ошибка получения ID.');
+  }
+});
+
+// Handle copy ID callback
+bot.on('callback_query', async query => {
+  const chatId = query.message?.chat.id;
+  const data = query.data;
+
+  if (data?.startsWith('copy_id_')) {
+    const telegramId = data.replace('copy_id_', '');
+    await bot.answerCallbackQuery(query.id, {
+      text: `ID ${telegramId} скопирован!`,
+      show_alert: false,
+    });
+  }
+});
+
 // /profile command - show and update profile
 bot.onText(/\/profile/, async msg => {
   const chatId = msg.chat.id;
@@ -206,7 +252,7 @@ bot.onText(/\/profile/, async msg => {
     const user = await apiRequest('GET', `/bot/user/${telegramId}`);
 
     let message = '👤 Ваш профиль:\n\n';
-    message += `🆔 Telegram ID: ${user.telegramId}\n`;
+    message += `🆔 Telegram ID: \`${user.telegramId}\`\n`;
     if (user.username) message += `👤 Username: @${user.username}\n`;
     if (user.firstName || user.lastName) {
       message += `📝 Имя: ${user.firstName || ''} ${user.lastName || ''}\n`;
@@ -223,9 +269,22 @@ bot.onText(/\/profile/, async msg => {
     }
 
     message += '\n💡 Для обновления профиля используйте веб-приложение или команду:\n';
-    message += '/lvl <число> - обновить уровень';
+    message += '/lvl <число> - обновить уровень\n';
+    message += '/id - получить ваш Telegram ID';
 
-    bot.sendMessage(chatId, message);
+    bot.sendMessage(chatId, message, {
+      parse_mode: 'Markdown',
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: '📋 Копировать ID',
+              callback_data: `copy_id_${telegramId}`,
+            },
+          ],
+        ],
+      },
+    });
   } catch (error: any) {
     console.error('Error in /profile command:', error);
     bot.sendMessage(chatId, '❌ Ошибка получения профиля.');

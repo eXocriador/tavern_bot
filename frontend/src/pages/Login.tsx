@@ -1,22 +1,19 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { useLanguage } from '../context/LanguageContext';
-import LanguageSwitcher from '../components/ui/LanguageSwitcher';
 import './Login.css';
 
-// Load Telegram Web App SDK before anything else
+// Load Telegram Web App SDK
 if (typeof window !== 'undefined' && !window.Telegram?.WebApp) {
   const script = document.createElement('script');
   script.src = 'https://telegram.org/js/telegram-web-app.js';
-  script.async = false; // Load synchronously to ensure it's available immediately
+  script.async = false;
   document.head.appendChild(script);
 }
 
 declare global {
   interface Window {
-    onTelegramAuth?: (user: any) => void;
     Telegram?: {
       WebApp: {
         initData: string;
@@ -26,10 +23,7 @@ declare global {
             first_name?: string;
             last_name?: string;
             username?: string;
-            language_code?: string;
           };
-          auth_date: number;
-          hash: string;
         };
         ready: () => void;
         expand: () => void;
@@ -39,12 +33,12 @@ declare global {
 }
 
 const Login = () => {
-  const { login, user } = useAuth();
-  const { t } = useLanguage();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const botName = import.meta.env.VITE_TELEGRAM_BOT_NAME || 'your_bot_username';
   const [telegramId, setTelegramId] = useState('');
-  const [useDevMode, setUseDevMode] = useState(false);
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const [isTelegramWebApp, setIsTelegramWebApp] = useState(false);
 
   useEffect(() => {
@@ -53,239 +47,151 @@ const Login = () => {
     }
   }, [user, navigate]);
 
-  // Auto-login via Telegram Web App - MUST run first before widget loads
+  // Auto-login via Telegram Web App
   useEffect(() => {
     const handleAutoLogin = async () => {
-      // Check if Telegram Web App SDK is available
       if (!window.Telegram?.WebApp) {
         setIsTelegramWebApp(false);
         return;
       }
 
       const tgWebApp = window.Telegram.WebApp;
-
-      // Initialize immediately
       tgWebApp.ready();
       tgWebApp.expand();
 
-      // Get initData (raw string for verification)
       const initDataRaw = tgWebApp.initData;
-
-      // If no initData, we're not in Telegram Web App or it's empty
       if (!initDataRaw || initDataRaw.trim() === '') {
-        console.warn('Telegram Web App: initData is empty - not in Telegram or invalid');
         setIsTelegramWebApp(false);
         return;
       }
 
-      // Check user data exists
       const initDataUnsafe = tgWebApp.initDataUnsafe;
       if (!initDataUnsafe?.user?.id) {
-        console.warn('Telegram Web App: No user ID in initData', initDataUnsafe);
         setIsTelegramWebApp(false);
         return;
       }
 
-      // We're definitely in Telegram Web App - hide login button
       setIsTelegramWebApp(true);
 
       try {
         const API_URL = import.meta.env.VITE_API_URL || '/api';
-
-        console.log('Telegram Web App: Attempting authentication', {
-          hasInitData: !!initDataRaw,
-          initDataLength: initDataRaw?.length,
-          userId: initDataUnsafe?.user?.id,
-        });
-
-        // Send raw initData string to backend for verification
         const response = await axios.post(
           `${API_URL}/auth/webapp`,
           { initData: initDataRaw },
-          {
-            headers: { 'Content-Type': 'application/json' },
-            timeout: 10000,
-          }
+          { headers: { 'Content-Type': 'application/json' }, timeout: 10000 }
         );
 
         if (response.data?.success && response.data?.user) {
-          console.log('Telegram Web App: Authentication successful', {
-            telegramId: response.data.user.telegramId,
-          });
-          // Save user and redirect immediately
           localStorage.setItem('user', JSON.stringify(response.data.user));
-          window.location.replace('/'); // Use replace to avoid back button issues
+          window.location.replace('/');
         } else {
-          console.error('Telegram Web App: Invalid auth response', response.data);
           setIsTelegramWebApp(false);
         }
       } catch (error: any) {
-        const status = error.response?.status;
-        const message = error.response?.data?.error || error.message;
-
-        console.error('Telegram Web App auth error:', {
-          status,
-          message,
-          hasInitData: !!initDataRaw,
-          initDataLength: initDataRaw?.length,
-          userId: initDataUnsafe?.user?.id,
-          errorDetails: error.response?.data,
-        });
-
+        console.error('Telegram Web App auth error:', error);
         setIsTelegramWebApp(false);
-
-        // Show user-friendly error message
-        if (status === 401) {
-          console.warn('Telegram Web App: Authentication failed - hash verification or expired');
-        } else if (status === 400) {
-          console.warn('Telegram Web App: Invalid request data');
-        } else {
-          console.warn('Telegram Web App: Server error during authentication');
-        }
-        // Don't show alert - silently fall back to manual login
       }
     };
 
-    // Run immediately and retry in case SDK loads late
     handleAutoLogin();
     const retries = [50, 150, 300];
     const timeouts = retries.map(delay => setTimeout(handleAutoLogin, delay));
-
     return () => timeouts.forEach(clearTimeout);
   }, []);
 
-  useEffect(() => {
-    // Don't load widget if we're in Telegram Web App or dev mode
-    // Also check directly to avoid race condition
-    if (useDevMode || isTelegramWebApp || window.Telegram?.WebApp) {
-      return;
-    }
-
-    // Telegram Login Widget callback
-    window.onTelegramAuth = async (user: any) => {
-      try {
-        await login(user);
-        navigate('/');
-      } catch (error) {
-        console.error('Login failed:', error);
-        alert(t('login.error'));
-      }
-    };
-
-    // Load Telegram Login Widget script
-    const script = document.createElement('script');
-    script.src = 'https://telegram.org/js/telegram-widget.js?22';
-    script.setAttribute('data-telegram-login', botName);
-    script.setAttribute('data-size', 'large');
-    script.setAttribute('data-onauth', 'onTelegramAuth(user)');
-    script.setAttribute('data-request-access', 'write');
-    script.async = true;
-
-    const container = document.getElementById('telegram-login-container');
-    if (container && !container.querySelector('script[src*="telegram-widget"]')) {
-      container.appendChild(script);
-    }
-
-    return () => {
-      if (container && container.contains(script)) {
-        container.removeChild(script);
-      }
-    };
-  }, [login, navigate, botName, useDevMode, isTelegramWebApp]);
-
-  const handleDevLogin = async () => {
-    if (!telegramId || isNaN(Number(telegramId))) {
-      alert(t('login.checkId'));
-      return;
-    }
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
 
     try {
-      // For dev mode, always use local API (not ngrok URL)
-      const API_URL = '/api'; // Use relative path to leverage Vite proxy
-      const response = await axios.post(`${API_URL}/auth/dev`, {
-        id: Number(telegramId),
-        username: `dev_${telegramId}`,
-        first_name: 'Dev',
-      }, {
-        headers: {
-          'x-telegram-id': telegramId.toString(),
-        },
+      const API_URL = import.meta.env.VITE_API_URL || '/api';
+      const response = await axios.post(`${API_URL}/auth/login`, {
+        telegramId: Number(telegramId),
+        password,
       });
 
-      if (response.data.success && response.data.user) {
-        const userData = response.data.user;
-        // Manually set user and reload to update auth state
-        localStorage.setItem('user', JSON.stringify(userData));
-        window.location.href = '/'; // Force reload to update auth state
+      if (response.data?.success && response.data?.user) {
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        window.location.href = '/';
       } else {
-        throw new Error('Invalid response from server');
+        setError('Invalid credentials');
       }
     } catch (error: any) {
-      console.error('Dev login failed:', error);
-      const errorMessage = error.response?.data?.error || error.message || t('common.error');
-      alert(`${t('login.error')}: ${errorMessage}`);
+      setError(error.response?.data?.error || 'Login failed');
+    } finally {
+      setLoading(false);
     }
   };
 
+  // Don't show login form if in Telegram Web App
+  if (isTelegramWebApp) {
+    return (
+      <div className="login-container">
+        <div className="login-loading">
+          <div className="login-spinner"></div>
+          <p>Загрузка...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="login-container">
-      <div className="login-card">
+      <div className="login-panel">
         <div className="login-header">
-          <h1>{t('login.title')}</h1>
-          <div className="login-language-switcher">
-            <LanguageSwitcher />
-          </div>
+          <h1>Lineage 2 GoD</h1>
+          <p className="login-subtitle">Вход в систему</p>
         </div>
-        <p className="subtitle">{t('login.subtitle')}</p>
 
-        {useDevMode ? (
-          <div className="dev-login">
+        <form onSubmit={handleLogin} className="login-form">
+          <div className="login-input-group">
+            <label htmlFor="telegramId">Telegram ID</label>
             <input
+              id="telegramId"
               type="text"
-              placeholder={t('login.devInputPlaceholder')}
               value={telegramId}
               onChange={(e) => setTelegramId(e.target.value)}
-              className="dev-input"
+              placeholder="Введите ваш Telegram ID"
+              required
+              autoComplete="username"
             />
-            <button onClick={handleDevLogin} className="dev-button">
-              {t('login.devButton')}
-            </button>
-            <button
-              onClick={() => setUseDevMode(false)}
-              className="dev-toggle"
-            >
-              {t('login.returnToTelegram')}
-            </button>
-            <p className="dev-hint">
-              {t('login.devHint')}
+            <p className="login-hint">
+              Узнайте свой ID через бота: <code>/id</code>
             </p>
           </div>
-        ) : (
-          <>
-            {!isTelegramWebApp && (
-              <>
-                <div id="telegram-login-container"></div>
-                <button
-                  onClick={() => setUseDevMode(true)}
-                  className="dev-toggle"
-                >
-                  {t('login.devMode')}
-                </button>
-              </>
-            )}
-            {isTelegramWebApp && (
-              <p className="hint">{t('common.loading')}</p>
-            )}
-          </>
-        )}
 
-        <p className="hint">
-          {t('login.hint')}
-        </p>
+          <div className="login-input-group">
+            <label htmlFor="password">Пароль</label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Введите пароль"
+              required
+              autoComplete="current-password"
+            />
+          </div>
+
+          {error && <div className="login-error">{error}</div>}
+
+          <button type="submit" className="login-button" disabled={loading}>
+            {loading ? 'Вход...' : 'Войти'}
+          </button>
+        </form>
+
+        <div className="login-links">
+          <Link to="/register" className="login-link">
+            Регистрация
+          </Link>
+          <Link to="/forgot-password" className="login-link">
+            Забыли пароль?
+          </Link>
+        </div>
       </div>
     </div>
   );
 };
 
 export default Login;
-

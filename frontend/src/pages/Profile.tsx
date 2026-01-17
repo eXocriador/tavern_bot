@@ -5,6 +5,7 @@ import { CharacterCard } from '../components/features';
 import { EmptyState } from '../components/ui';
 import CharacterModal from '../components/modals/CharacterModal';
 import DeleteConfirmModal from '../components/modals/DeleteConfirmModal';
+import axios from 'axios';
 import './Profile.css';
 
 const Profile = () => {
@@ -15,6 +16,13 @@ const Profile = () => {
   const [editingCharacter, setEditingCharacter] = useState<Character | null>(null);
   const [deletingCharacter, setDeletingCharacter] = useState<Character | null>(null);
   const [isDeleteMode, setIsDeleteMode] = useState(false);
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
   useEffect(() => {
     loadCharacters();
@@ -50,6 +58,45 @@ const Profile = () => {
     await deleteCharacter(deletingCharacter._id);
     await loadCharacters();
     setDeletingCharacter(null);
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError('Пароли не совпадают');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setPasswordError('Пароль должен быть не менее 6 символов');
+      return;
+    }
+
+    setPasswordLoading(true);
+
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || '/api';
+      await axios.post(`${API_URL}/auth/change-password`, {
+        oldPassword,
+        newPassword,
+      });
+
+      setPasswordSuccess('Пароль успешно изменен');
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setTimeout(() => {
+        setShowPasswordChange(false);
+        setPasswordSuccess('');
+      }, 2000);
+    } catch (error: any) {
+      setPasswordError(error.response?.data?.error || 'Failed to change password');
+    } finally {
+      setPasswordLoading(false);
+    }
   };
 
   if (loading) {
@@ -111,6 +158,81 @@ const Profile = () => {
               ))}
             </div>
           )}
+        </div>
+
+        <div className="profile-card">
+          <div className="profile-header">
+            <h2>Безопасность</h2>
+          </div>
+          <div className="password-change-section">
+            {!showPasswordChange ? (
+              <button
+                onClick={() => setShowPasswordChange(true)}
+                className="btn-change-password"
+              >
+                Изменить пароль
+              </button>
+            ) : (
+              <form onSubmit={handleChangePassword} className="password-change-form">
+                <div className="password-input-group">
+                  <label htmlFor="oldPassword">Старый пароль</label>
+                  <input
+                    id="oldPassword"
+                    type="password"
+                    value={oldPassword}
+                    onChange={(e) => setOldPassword(e.target.value)}
+                    placeholder="Введите старый пароль"
+                    required
+                  />
+                </div>
+                <div className="password-input-group">
+                  <label htmlFor="newPassword">Новый пароль</label>
+                  <input
+                    id="newPassword"
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Минимум 6 символов"
+                    required
+                    minLength={6}
+                  />
+                </div>
+                <div className="password-input-group">
+                  <label htmlFor="confirmPassword">Подтвердите пароль</label>
+                  <input
+                    id="confirmPassword"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Повторите новый пароль"
+                    required
+                    minLength={6}
+                  />
+                </div>
+                {passwordError && <div className="password-error">{passwordError}</div>}
+                {passwordSuccess && <div className="password-success">{passwordSuccess}</div>}
+                <div className="password-actions">
+                  <button type="submit" className="btn-save-password" disabled={passwordLoading}>
+                    {passwordLoading ? 'Сохранение...' : 'Сохранить'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowPasswordChange(false);
+                      setOldPassword('');
+                      setNewPassword('');
+                      setConfirmPassword('');
+                      setPasswordError('');
+                      setPasswordSuccess('');
+                    }}
+                    className="btn-cancel-password"
+                  >
+                    Отмена
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
         </div>
       </main>
 
