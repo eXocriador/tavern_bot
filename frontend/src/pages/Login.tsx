@@ -48,15 +48,46 @@ const Login = () => {
   // Auto-login via Telegram Web App
   useEffect(() => {
     const handleTelegramWebAppAuth = async () => {
-      // Wait a bit for Telegram Web App SDK to load
-      const checkTelegramWebApp = () => {
-        // Check if running inside Telegram Web App
-        if (!window.Telegram?.WebApp) {
-          setIsTelegramWebApp(false);
+      // Check multiple ways to detect Telegram Web App
+      const detectTelegramWebApp = (): typeof window.Telegram.WebApp | null => {
+        // Method 1: Check window.Telegram.WebApp (official SDK)
+        if (window.Telegram?.WebApp) {
+          return window.Telegram.WebApp;
+        }
+
+        // Method 2: Check if we're in Telegram by looking for initData in URL or window
+        // Telegram sometimes injects initData in different ways
+        const tgWebAppData = (window as any).tgWebAppData;
+        if (tgWebAppData) {
+          // If tgWebAppData exists, we're in Telegram
+          // Return a mock WebApp object
+          return null; // Will handle separately
+        }
+
+        // Method 3: Check user agent (less reliable but can help)
+        const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+        if (/Telegram/i.test(userAgent)) {
+          // We're in Telegram, but SDK might not be loaded yet
           return null;
         }
 
-        const webApp = window.Telegram.WebApp;
+        return null;
+      };
+
+      // Log for debugging
+      console.log('Checking Telegram Web App:', {
+        hasTelegram: !!window.Telegram,
+        hasWebApp: !!window.Telegram?.WebApp,
+        initData: window.Telegram?.WebApp?.initData?.substring(0, 50) || 'none',
+        userAgent: navigator.userAgent,
+      });
+
+      // Try to detect Telegram Web App
+      let webApp = detectTelegramWebApp();
+
+      // If WebApp SDK is available, use it
+      if (webApp) {
+        console.log('Telegram Web App detected, initData:', webApp.initData?.substring(0, 100));
         setIsTelegramWebApp(true);
         webApp.ready();
         webApp.expand();
@@ -65,70 +96,69 @@ const Login = () => {
         if (!webApp.initData) {
           console.log('No initData in Telegram Web App');
           setIsTelegramWebApp(false);
-          return null;
+          return;
         }
 
         const initData = webApp.initDataUnsafe;
 
         // Check if we have user data
         if (!initData.user || !initData.user.id) {
-          console.log('No user data in Telegram Web App');
-          setIsTelegramWebApp(false);
-          return null;
-        }
-
-        return webApp;
-      };
-
-      // Check immediately
-      const webApp = checkTelegramWebApp();
-      if (!webApp) {
-        return;
-      }
-
-      try {
-        const API_URL = import.meta.env.VITE_API_URL || '/api';
-
-        if (!webApp.initData) {
-          console.error('Telegram Web App: initData is empty');
+          console.log('No user data in Telegram Web App', initData);
           setIsTelegramWebApp(false);
           return;
         }
 
-        // Send initData string to backend for verification
-        const response = await axios.post(`${API_URL}/auth/webapp`, {
-          initData: webApp.initData, // Send raw initData string for verification
-        });
+        try {
+          const API_URL = import.meta.env.VITE_API_URL || '/api';
 
-        if (response.data.success && response.data.user) {
-          const userData = response.data.user;
-          // Update auth context
-          localStorage.setItem('user', JSON.stringify(userData));
-          window.location.href = '/'; // Force reload to update auth state
-        } else {
-          console.error('Telegram Web App auth: Invalid response', response.data);
+          // Send initData string to backend for verification
+          const response = await axios.post(`${API_URL}/auth/webapp`, {
+            initData: webApp.initData, // Send raw initData string for verification
+          });
+
+          if (response.data.success && response.data.user) {
+            const userData = response.data.user;
+            // Update auth context
+            localStorage.setItem('user', JSON.stringify(userData));
+            window.location.href = '/'; // Force reload to update auth state
+          } else {
+            console.error('Telegram Web App auth: Invalid response', response.data);
+            setIsTelegramWebApp(false);
+          }
+        } catch (error: any) {
+          console.error('Telegram Web App auth failed:', error);
+          const errorMessage = error.response?.data?.error || error.message || 'Authentication failed';
+          console.error('Error details:', errorMessage);
           setIsTelegramWebApp(false);
+          // Show error to user
+          alert(`Помилка авторизації: ${errorMessage}`);
+          // Fall back to regular login widget
         }
-      } catch (error: any) {
-        console.error('Telegram Web App auth failed:', error);
-        const errorMessage = error.response?.data?.error || error.message || 'Authentication failed';
-        console.error('Error details:', errorMessage);
+      } else {
+        // Not in Telegram Web App, or SDK not loaded yet
         setIsTelegramWebApp(false);
-        // Show error to user
-        alert(`Помилка авторизації: ${errorMessage}`);
-        // Fall back to regular login widget
       }
     };
 
-    // Try immediately
-    handleTelegramWebAppAuth();
+    // Wait for DOM and SDK to be ready
+    const checkInterval = setInterval(() => {
+      if (document.readyState === 'complete') {
+        handleTelegramWebAppAuth();
+        clearInterval(checkInterval);
+      }
+    }, 50);
 
-    // Also try after a short delay in case SDK loads late
-    const timeout = setTimeout(() => {
-      handleTelegramWebAppAuth();
-    }, 100);
+    // Also try after delays for SDK loading
+    const timeouts = [
+      setTimeout(handleTelegramWebAppAuth, 100),
+      setTimeout(handleTelegramWebAppAuth, 300),
+      setTimeout(handleTelegramWebAppAuth, 500),
+    ];
 
-    return () => clearTimeout(timeout);
+    return () => {
+      clearInterval(checkInterval);
+      timeouts.forEach(clearTimeout);
+    };
   }, []);
 
   useEffect(() => {
