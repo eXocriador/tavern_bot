@@ -45,6 +45,7 @@ router.post('/webapp', async (req: express.Request, res: Response) => {
     }
 
     // Parse initData (format: "key=value&key=value&hash=...")
+    // Telegram sends values URL-encoded, so we need to parse them correctly
     const params = new URLSearchParams(initData);
     const hash = params.get('hash');
 
@@ -53,13 +54,18 @@ router.post('/webapp', async (req: express.Request, res: Response) => {
       return res.status(400).json({ error: 'Hash is missing in initData' });
     }
 
-    params.delete('hash');
+    // Remove hash from params for data check string
+    const dataParams: string[] = [];
+    params.forEach((value, key) => {
+      if (key !== 'hash') {
+        // Values should be URL-decoded for hash calculation
+        const decodedValue = decodeURIComponent(value);
+        dataParams.push(`${key}=${decodedValue}`);
+      }
+    });
 
-    // Build data check string
-    const dataCheckString = Array.from(params.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([key, value]) => `${key}=${value}`)
-      .join('\n');
+    // Sort alphabetically and join with newlines (Telegram spec)
+    const dataCheckString = dataParams.sort().join('\n');
 
     // Verify hash
     const secretKey = crypto
