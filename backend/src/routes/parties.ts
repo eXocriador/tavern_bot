@@ -16,17 +16,31 @@ const sendTelegramNotification = async (
   try {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     if (!botToken) {
-      console.warn('TELEGRAM_BOT_TOKEN not configured, skipping notification');
+      console.warn('⚠️  TELEGRAM_BOT_TOKEN not configured, skipping notification');
       return;
     }
 
-    await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+    const response = await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
       chat_id: chatId,
       text: message,
       parse_mode: 'HTML',
     });
-  } catch (error) {
-    console.error('Error sending Telegram notification:', error);
+
+    console.log('✅ Telegram API response:', response.data.ok ? 'SUCCESS' : 'FAILED');
+    if (!response.data.ok) {
+      console.error('❌ Telegram API error:', response.data);
+    }
+  } catch (error: any) {
+    console.error('❌ Error sending Telegram notification:');
+    if (error.response) {
+      console.error('  Status:', error.response.status);
+      console.error('  Data:', error.response.data);
+    } else if (error.request) {
+      console.error('  No response received:', error.message);
+    } else {
+      console.error('  Error:', error.message);
+    }
+    throw error; // Re-throw to allow caller to handle
   }
 };
 
@@ -75,44 +89,70 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
     const readyTimeDate = new Date(readyTime);
 
     // Get chat ID from environment or use a default group chat
-    const chatId = process.env.TELEGRAM_CHAT_ID;
-    if (chatId && creator && zone) {
-      const invitedUsers = await User.find({
-        _id: { $in: invitedUserIds },
-      });
+    const chatIdStr = process.env.TELEGRAM_CHAT_ID;
+    const chatId = chatIdStr ? Number(chatIdStr) : null;
 
-      // Build mentions string
-      const mentions = invitedUsers
-        .map((user) => (user.username ? `@${user.username}` : `ID:${user.telegramId}`))
-        .join(' ');
+    console.log('📢 Party creation notification check:');
+    console.log('  - TELEGRAM_CHAT_ID (raw):', chatIdStr || 'NOT SET');
+    console.log('  - TELEGRAM_CHAT_ID (parsed):', chatId);
+    console.log('  - Creator:', creator ? `${creator.username || creator.telegramId}` : 'NOT FOUND');
+    console.log('  - Zone:', zone ? zone.name : 'NOT FOUND');
+    console.log('  - Invited users count:', invitedUserIds.length);
 
-      // Get character info for each invited user
-      const selectedCharacterIds = req.body.selectedCharacterIds || {};
-      const characterInfoPromises = invitedUsers.map(async (user) => {
-        const characterId = selectedCharacterIds[user._id.toString()];
-        if (characterId) {
-          const character = await Character.findById(characterId);
-          if (character) {
-            return `${user.username ? `@${user.username}` : `ID:${user.telegramId}`} (${character.nickname}, ${character.profession}, Lvl ${character.level})`;
+    if (!chatIdStr) {
+      console.warn('⚠️  TELEGRAM_CHAT_ID not configured. Skipping notification.');
+      console.warn('💡 To get chat ID, send /chatid command to the bot in your group');
+    } else if (!chatId || isNaN(chatId)) {
+      console.error('❌ Invalid TELEGRAM_CHAT_ID format. Must be a number.');
+      console.error('   Current value:', chatIdStr);
+    } else if (!creator) {
+      console.warn('⚠️  Creator not found. Skipping notification.');
+    } else if (!zone) {
+      console.warn('⚠️  Zone not found. Skipping notification.');
+    } else {
+      try {
+        const invitedUsers = await User.find({
+          _id: { $in: invitedUserIds },
+        });
+
+        console.log('  - Found invited users:', invitedUsers.length);
+
+        // Build mentions string
+        const mentions = invitedUsers
+          .map((user) => (user.username ? `@${user.username}` : `ID:${user.telegramId}`))
+          .join(' ');
+
+        // Get nickname info for each invited user
+        const selectedNicknames = req.body.selectedNicknames || {};
+        console.log('  - Selected nicknames:', selectedNicknames);
+
+        const characterInfo = invitedUsers.map((user) => {
+          const nickname = selectedNicknames[user._id.toString()];
+          if (nickname) {
+            return `${user.username ? `@${user.username}` : `ID:${user.telegramId}`} (${nickname})`;
           }
-        }
-        return user.username ? `@${user.username}` : `ID:${user.telegramId}`;
-      });
+          return user.username ? `@${user.username}` : `ID:${user.telegramId}`;
+        });
 
-      const characterInfo = await Promise.all(characterInfoPromises);
+        // Format time in creator's timezone
+        const creatorTimezone = creator.timezone || 'UTC';
+        const formattedTime = formatTimeInTimezone(readyTimeDate, creatorTimezone);
 
-      // Format time in creator's timezone
-      const creatorTimezone = creator.timezone || 'UTC';
-      const formattedTime = formatTimeInTimezone(readyTimeDate, creatorTimezone);
-
-      const message = `🎮 <b>Новий збір в інстанс!</b>\n\n` +
-        `📍 <b>Інстанс:</b> ${zone.name}\n` +
-        `👤 <b>Організатор:</b> ${creator.username ? `@${creator.username}` : `ID:${creator.telegramId}`}\n` +
-        `⏰ <b>Час готовності:</b> ${formattedTime} (${creatorTimezone})\n\n` +
-        `👥 <b>Запрошені гравці:</b>\n${characterInfo.map((info) => `  • ${info}`).join('\n')}\n\n` +
+      const message = `🎮 <b>Новый сбор в инстанс!</b>\n\n` +
+        `📍 <b>Инстанс:</b> ${zone.name}\n` +
+        `👤 <b>Организатор:</b> ${creator.username ? `@${creator.username}` : `ID:${creator.telegramId}`}\n` +
+        `⏰ <b>Время готовности:</b> ${formattedTime} (${creatorTimezone})\n\n` +
+        `👥 <b>Приглашенные игроки:</b>\n${characterInfo.map((info) => `  • ${info}`).join('\n')}\n\n` +
         `${mentions}`;
 
-      await sendTelegramNotification(Number(chatId), message);
+        console.log('📤 Sending Telegram notification to chat:', chatId);
+        console.log('📝 Message preview:', message.substring(0, 100) + '...');
+
+        await sendTelegramNotification(chatId, message);
+        console.log('✅ Telegram notification sent successfully');
+      } catch (error) {
+        console.error('❌ Error sending Telegram notification:', error);
+      }
     }
 
     res.status(201).json(party);

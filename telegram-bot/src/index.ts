@@ -84,21 +84,22 @@ const getNextResetDate = (): Date => {
 bot.onText(/\/start/, async msg => {
   const chatId = msg.chat.id;
   const welcomeMessage = `
-👋 Вітаю! Я Tavern Bot - помічник для відстеження інстанс-зон Lineage 2.
+👋 Привет! Я Tavern Bot - помощник для отслеживания инстанс-зон Lineage 2.
 
-📋 Основні команди:
-/iz - Мій статус інстансів
-/visit <назва> - Відмітити відвідування
-/remove <назва> - Видалити відвідування
+📋 Основные команды:
+/iz - Мой статус инстансов (доступные и пройденные)
+/visit <название> - Отметить посещение
+/remove <название> - Удалить посещение
 /stats - Моя статистика
-/profile - Мій профіль
-/level <число> - Оновити рівень
-/reset - Коли наступний ресет
-/global - Глобальна статистика
-/top - Топ гравців
-/help - Повний список команд
+/profile - Мой профиль
+/level <число> - Обновить уровень
+/reset - Когда следующий ресет
+/global - Глобальная статистика
+/top - Топ игроков
+/chatid - Получить ID чата (для настройки)
+/help - Полный список команд
 
-💡 Приклад: /visit Zaken (Daytime)
+💡 Пример: /visit Zaken (Daytime)
   `;
 
   bot.sendMessage(chatId, welcomeMessage);
@@ -108,28 +109,29 @@ bot.onText(/\/start/, async msg => {
 bot.onText(/\/help/, async msg => {
   const chatId = msg.chat.id;
   const helpMessage = `
-📚 Повний список команд:
+📚 Полный список команд:
 
-📊 Статус та відвідування:
-/iz - Показати мій статус (закриті та доступні інстанси)
-/visit <назва> - Відмітити відвідування зони
-/remove <назва> - Видалити відвідування зони
-/zone <назва> - Детальна інформація про зону
+📊 Статус и посещения:
+/iz - Показать мой статус (закрытые и доступные инстансы)
+/visit <название> - Отметить посещение зоны
+/remove <название> - Удалить посещение зоны
+/zone <название> - Подробная информация о зоне
 
 📈 Статистика:
 /stats - Моя статистика
-/global - Глобальна статистика
-/top - Топ 10 гравців
+/global - Глобальная статистика
+/top - Топ 10 игроков
 
-👤 Профіль:
-/profile - Переглянути/оновити профіль
-/level <1-100> - Оновити рівень персонажа
+👤 Профиль:
+/profile - Просмотреть/обновить профиль
+/level <1-100> - Обновить уровень персонажа
 
-⏰ Інформація:
-/reset - Коли наступний ресет інстансів
-/help - Цей список команд
+⏰ Информация:
+/reset - Когда следующий ресет инстансов
+/chatid - Получить ID чата (для настройки)
+/help - Этот список команд
 
-💡 Приклади:
+💡 Примеры:
 /visit Zaken (Daytime)
 /remove Zaken (Daytime)
 /level 85
@@ -160,11 +162,15 @@ const ensureUserExists = async (
 };
 
 // /iz command - show instance status
-bot.onText(/\/iz(?:\s+@(\w+))?/, async msg => {
+bot.onText(/\/iz/, async msg => {
   const chatId = msg.chat.id;
 
   try {
     const telegramId = msg.from?.id;
+    if (!telegramId) {
+      bot.sendMessage(chatId, '❌ Ошибка идентификации пользователя.');
+      return;
+    }
 
     // Ensure user exists
     if (msg.from) {
@@ -176,44 +182,60 @@ bot.onText(/\/iz(?:\s+@(\w+))?/, async msg => {
       );
     }
 
-    // If username provided, need to find user by username
-    // For now, we'll use the current user's ID
-    // In production, you'd need to implement username lookup
-
     const visits = await apiRequest('GET', `/bot/visits/${telegramId}`);
     const instances = await apiRequest('GET', '/instances');
 
-    const visitedZoneIds = new Set(visits.map((v: any) => v.zoneId.zoneId));
+    const visitedZoneIds = new Set(visits.map((v: any) => v.zoneId?.zoneId).filter(Boolean));
 
-    let message = '📊 Статус інстанс-зон:\n\n';
-    message += '✅ Пройдені зони:\n';
+    let message = '📊 <b>Статус инстанс-зон:</b>\n\n';
+    message += '✅ <b>Пройденные зоны:</b>\n';
 
     const visited = instances.filter((inst: any) => visitedZoneIds.has(inst.zoneId));
     if (visited.length === 0) {
-      message += '  Немає пройдених зон\n';
+      message += '  Нет пройденных зон\n';
     } else {
       visited.forEach((inst: any) => {
         message += `  • ${inst.name}\n`;
       });
     }
 
-    message += '\n🔓 Доступні зони:\n';
+    message += '\n🔓 <b>Доступные зоны:</b>\n';
     const available = instances.filter((inst: any) => !visitedZoneIds.has(inst.zoneId));
     if (available.length === 0) {
-      message += '  Всі зони пройдені! 🎉\n';
+      message += '  Все зоны пройдены! 🎉\n';
     } else {
       available.forEach((inst: any) => {
         message += `  • ${inst.name}\n`;
       });
     }
 
-    message += `\n📈 Прогрес: ${visited.length}/${instances.length} (${Math.round((visited.length / instances.length) * 100)}%)`;
+    const totalInstances = instances.length;
+    const visitedCount = visited.length;
+    const progressPercent = totalInstances > 0 ? Math.round((visitedCount / totalInstances) * 100) : 0;
+    message += `\n📈 <b>Прогресс:</b> ${visitedCount}/${totalInstances} (${progressPercent}%)`;
 
-    bot.sendMessage(chatId, message);
+    bot.sendMessage(chatId, message, { parse_mode: 'HTML' });
   } catch (error: any) {
     console.error('Error in /iz command:', error);
-    bot.sendMessage(chatId, '❌ Помилка отримання статусу. Спробуйте пізніше.');
+    bot.sendMessage(chatId, '❌ Ошибка получения статуса. Попробуйте позже.');
   }
+});
+
+// /chatid command - get chat ID (useful for configuration)
+bot.onText(/\/chatid/, async msg => {
+  const chatId = msg.chat.id;
+  const chatType = msg.chat.type; // 'private', 'group', 'supergroup', 'channel'
+
+  let message = `🆔 <b>Chat ID:</b> <code>${chatId}</code>\n`;
+  message += `📋 <b>Тип чата:</b> ${chatType}\n`;
+
+  if (msg.chat.title) {
+    message += `📝 <b>Название:</b> ${msg.chat.title}\n`;
+  }
+
+  message += `\n💡 Добавьте этот ID в переменную окружения <code>TELEGRAM_CHAT_ID</code> в backend/.env`;
+
+  bot.sendMessage(chatId, message, { parse_mode: 'HTML' });
 });
 
 // /visit command - mark visit
@@ -222,7 +244,7 @@ bot.onText(/\/visit\s+(.+)/, async (msg, match) => {
   const zoneName = match?.[1]?.trim();
 
   if (!zoneName) {
-    bot.sendMessage(chatId, '❌ Вкажіть назву зони. Приклад: /visit Zaken (Daytime)');
+    bot.sendMessage(chatId, '❌ Укажите название зоны. Пример: /visit Zaken (Daytime)');
     return;
   }
 
@@ -245,7 +267,7 @@ bot.onText(/\/visit\s+(.+)/, async (msg, match) => {
     if (!zone) {
       bot.sendMessage(
         chatId,
-        `❌ Зона "${zoneName}" не знайдена. Використайте /iz щоб побачити список доступних зон.`
+        `❌ Зона "${zoneName}" не найдена. Используйте /iz чтобы увидеть список доступных зон.`
       );
       return;
     }
@@ -254,21 +276,21 @@ bot.onText(/\/visit\s+(.+)/, async (msg, match) => {
     try {
       // Try to mark visit via bot endpoint
       await apiRequest('POST', `/bot/visits/${msg.from?.id}/${zone.zoneId}`);
-      bot.sendMessage(chatId, `✅ Відмічено відвідування: ${zone.name}`);
+      bot.sendMessage(chatId, `✅ Отмечено посещение: ${zone.name}`);
     } catch (error: any) {
       if (error.response?.status === 404) {
         bot.sendMessage(
           chatId,
-          `❌ Користувач не знайдений. Будь ласка, спочатку увійдіть через веб-додаток для реєстрації.`
+          `❌ Пользователь не найден. Пожалуйста, сначала войдите через веб-приложение для регистрации.`
         );
       } else {
-        const errorMsg = error.response?.data?.error || 'Помилка відмітки відвідування';
+        const errorMsg = error.response?.data?.error || 'Ошибка отметки посещения';
         bot.sendMessage(chatId, `❌ ${errorMsg}`);
       }
     }
   } catch (error: any) {
     console.error('Error in /visit command:', error);
-    bot.sendMessage(chatId, '❌ Помилка відмітки відвідування.');
+    bot.sendMessage(chatId, '❌ Ошибка отметки посещения.');
   }
 });
 
@@ -291,27 +313,27 @@ bot.onText(/\/stats(?:\s+@(\w+))?/, async msg => {
     const stats = await apiRequest('GET', `/statistics/user/${telegramId}`);
 
     let message = '📊 Статистика:\n\n';
-    message += `👤 Гравець: ${stats.user?.characterName || stats.user?.username || 'Не вказано'}\n\n`;
+    message += `👤 Игрок: ${stats.user?.characterName || stats.user?.username || 'Не указано'}\n\n`;
 
-    message += '📅 Поточний період:\n';
+    message += '📅 Текущий период:\n';
     message += `  • Пройдено: ${stats.currentPeriod.visited} зон\n`;
     message += `  • Доступно: ${stats.currentPeriod.available} зон\n`;
-    message += `  • Прогрес: ${stats.currentPeriod.completionRate.toFixed(1)}%\n\n`;
+    message += `  • Прогресс: ${stats.currentPeriod.completionRate.toFixed(1)}%\n\n`;
 
-    message += '⏱️ За весь час:\n';
-    message += `  • Всього відвідувань: ${stats.allTime.totalVisits}\n`;
+    message += '⏱️ За всё время:\n';
+    message += `  • Всего посещений: ${stats.allTime.totalVisits}\n`;
 
     if (stats.allTime.mostVisited.length > 0) {
-      message += '\n🏆 Найчастіше відвідувані:\n';
+      message += '\n🏆 Наиболее посещаемые:\n';
       stats.allTime.mostVisited.slice(0, 5).forEach((zone: any, index: number) => {
-        message += `  ${index + 1}. ${zone.zoneId.name} - ${zone.totalVisits} разів\n`;
+        message += `  ${index + 1}. ${zone.zoneId.name} - ${zone.totalVisits} раз\n`;
       });
     }
 
     bot.sendMessage(chatId, message);
   } catch (error: any) {
     console.error('Error in /stats command:', error);
-    bot.sendMessage(chatId, '❌ Помилка отримання статистики.');
+    bot.sendMessage(chatId, '❌ Ошибка получения статистики.');
   }
 });
 
@@ -321,14 +343,14 @@ bot.onText(/\/remove\s+(.+)/, async (msg, match) => {
   const zoneName = match?.[1]?.trim();
 
   if (!zoneName) {
-    bot.sendMessage(chatId, '❌ Вкажіть назву зони. Приклад: /remove Zaken (Daytime)');
+    bot.sendMessage(chatId, '❌ Укажите название зоны. Пример: /remove Zaken (Daytime)');
     return;
   }
 
   try {
     const telegramId = msg.from?.id;
     if (!telegramId) {
-      bot.sendMessage(chatId, '❌ Помилка ідентифікації користувача.');
+      bot.sendMessage(chatId, '❌ Ошибка идентификации пользователя.');
       return;
     }
 
@@ -340,16 +362,16 @@ bot.onText(/\/remove\s+(.+)/, async (msg, match) => {
     if (!zone) {
       bot.sendMessage(
         chatId,
-        `❌ Зона "${zoneName}" не знайдена. Використайте /iz щоб побачити список доступних зон.`
+        `❌ Зона "${zoneName}" не найдена. Используйте /iz чтобы увидеть список доступных зон.`
       );
       return;
     }
 
     await apiRequest('DELETE', `/bot/visits/${telegramId}/${zone.zoneId}`);
-    bot.sendMessage(chatId, `✅ Видалено відвідування: ${zone.name}`);
+    bot.sendMessage(chatId, `✅ Удалено посещение: ${zone.name}`);
   } catch (error: any) {
     console.error('Error in /remove command:', error);
-    const errorMsg = error.response?.data?.error || 'Помилка видалення відвідування';
+    const errorMsg = error.response?.data?.error || 'Ошибка удаления посещения';
     bot.sendMessage(chatId, `❌ ${errorMsg}`);
   }
 });
@@ -365,26 +387,26 @@ bot.onText(/\/reset/, async msg => {
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
 
-    const dayNames = ['Неділя', 'Понеділок', 'Вівторок', 'Середа', 'Четвер', "П'ятниця", 'Субота'];
+    const dayNames = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
     const dayName = dayNames[nextReset.getDay()];
 
-    let message = '⏰ Наступний ресет інстансів:\n\n';
-    message += `📅 ${dayName}, ${nextReset.toLocaleDateString('uk-UA')} о 10:00 (Київ)\n\n`;
+    let message = '⏰ Следующий ресет инстансов:\n\n';
+    message += `📅 ${dayName}, ${nextReset.toLocaleDateString('ru-RU')} в 10:00 (Киев)\n\n`;
 
     if (diffHours > 0) {
-      message += `⏳ Залишилось: ${diffHours} год. ${diffMinutes} хв.`;
+      message += `⏳ Осталось: ${diffHours} ч. ${diffMinutes} мин.`;
     } else if (diffMinutes > 0) {
-      message += `⏳ Залишилось: ${diffMinutes} хв.`;
+      message += `⏳ Осталось: ${diffMinutes} мин.`;
     } else {
-      message += '🔄 Ресет відбувається зараз!';
+      message += '🔄 Ресет происходит сейчас!';
     }
 
-    message += '\n\n💡 Ресет відбувається щопонеділка та щосереди о 10:00 ранку за Києвом.';
+    message += '\n\n💡 Ресет происходит каждый понедельник и среду в 10:00 утра по Киеву.';
 
     bot.sendMessage(chatId, message);
   } catch (error: any) {
     console.error('Error in /reset command:', error);
-    bot.sendMessage(chatId, '❌ Помилка отримання інформації про ресет.');
+    bot.sendMessage(chatId, '❌ Ошибка получения информации о ресете.');
   }
 });
 
@@ -395,7 +417,7 @@ bot.onText(/\/profile/, async msg => {
   try {
     const telegramId = msg.from?.id;
     if (!telegramId) {
-      bot.sendMessage(chatId, '❌ Помилка ідентифікації користувача.');
+      bot.sendMessage(chatId, '❌ Ошибка идентификации пользователя.');
       return;
     }
 
@@ -408,30 +430,30 @@ bot.onText(/\/profile/, async msg => {
 
     const user = await apiRequest('GET', `/bot/user/${telegramId}`);
 
-    let message = '👤 Ваш профіль:\n\n';
+    let message = '👤 Ваш профиль:\n\n';
     message += `🆔 Telegram ID: ${user.telegramId}\n`;
     if (user.username) message += `👤 Username: @${user.username}\n`;
     if (user.firstName || user.lastName) {
-      message += `📝 Ім'я: ${user.firstName || ''} ${user.lastName || ''}\n`;
+      message += `📝 Имя: ${user.firstName || ''} ${user.lastName || ''}\n`;
     }
     if (user.characterName) {
       message += `🎮 Персонаж: ${user.characterName}\n`;
     } else {
-      message += `🎮 Персонаж: Не вказано\n`;
+      message += `🎮 Персонаж: Не указано\n`;
     }
     if (user.characterLevel) {
-      message += `📊 Рівень: ${user.characterLevel}\n`;
+      message += `📊 Уровень: ${user.characterLevel}\n`;
     } else {
-      message += `📊 Рівень: Не вказано\n`;
+      message += `📊 Уровень: Не указано\n`;
     }
 
-    message += '\n💡 Для оновлення профілю використайте веб-додаток або команди:\n';
-    message += '/level <число> - оновити рівень';
+    message += '\n💡 Для обновления профиля используйте веб-приложение или команды:\n';
+    message += '/level <число> - обновить уровень';
 
     bot.sendMessage(chatId, message);
   } catch (error: any) {
     console.error('Error in /profile command:', error);
-    bot.sendMessage(chatId, '❌ Помилка отримання профілю.');
+    bot.sendMessage(chatId, '❌ Ошибка получения профиля.');
   }
 });
 
@@ -441,22 +463,22 @@ bot.onText(/\/level\s+(\d+)/, async (msg, match) => {
   const level = parseInt(match?.[1] || '0');
 
   if (level < 1 || level > 100) {
-    bot.sendMessage(chatId, '❌ Рівень повинен бути від 1 до 100.');
+    bot.sendMessage(chatId, '❌ Уровень должен быть от 1 до 100.');
     return;
   }
 
   try {
     const telegramId = msg.from?.id;
     if (!telegramId) {
-      bot.sendMessage(chatId, '❌ Помилка ідентифікації користувача.');
+      bot.sendMessage(chatId, '❌ Ошибка идентификации пользователя.');
       return;
     }
 
     await apiRequest('PUT', `/bot/user/${telegramId}/level`, { level });
-    bot.sendMessage(chatId, `✅ Рівень оновлено: ${level}`);
+    bot.sendMessage(chatId, `✅ Уровень обновлен: ${level}`);
   } catch (error: any) {
     console.error('Error in /level command:', error);
-    bot.sendMessage(chatId, '❌ Помилка оновлення рівня.');
+    bot.sendMessage(chatId, '❌ Ошибка обновления уровня.');
   }
 });
 
@@ -467,36 +489,36 @@ bot.onText(/\/global/, async msg => {
   try {
     const stats = await apiRequest('GET', '/statistics/global');
 
-    let message = '🌍 Глобальна статистика:\n\n';
+    let message = '🌍 Глобальная статистика:\n\n';
 
-    message += '📅 Поточний період:\n';
-    message += `  • Всього відвідувань: ${stats.currentPeriod.totalVisits}\n`;
-    message += `  • Активних гравців: ${stats.currentPeriod.activeUsers}\n`;
-    message += `  • Всього користувачів: ${stats.currentPeriod.totalUsers}\n`;
-    message += `  • Середнє відвідувань: ${stats.currentPeriod.averageVisitsPerUser.toFixed(1)}\n\n`;
+    message += '📅 Текущий период:\n';
+    message += `  • Всего посещений: ${stats.currentPeriod.totalVisits}\n`;
+    message += `  • Активных игроков: ${stats.currentPeriod.activeUsers}\n`;
+    message += `  • Всего пользователей: ${stats.currentPeriod.totalUsers}\n`;
+    message += `  • Среднее посещений: ${stats.currentPeriod.averageVisitsPerUser.toFixed(1)}\n\n`;
 
     if (stats.currentPeriod.zonePopularity.length > 0) {
-      message += '🔥 Найпопулярніші зони:\n';
+      message += '🔥 Наиболее популярные зоны:\n';
       stats.currentPeriod.zonePopularity.slice(0, 5).forEach((zone: any, index: number) => {
-        message += `  ${index + 1}. ${zone.name} - ${zone.visits} відвідувань\n`;
+        message += `  ${index + 1}. ${zone.name} - ${zone.visits} посещений\n`;
       });
       message += '\n';
     }
 
-    message += '⏱️ За весь час:\n';
-    message += `  • Всього відвідувань: ${stats.allTime.totalVisits}\n`;
+    message += '⏱️ За всё время:\n';
+    message += `  • Всего посещений: ${stats.allTime.totalVisits}\n`;
 
     if (stats.allTime.mostPopularZones.length > 0) {
-      message += '\n🏆 Найпопулярніші зони (за весь час):\n';
+      message += '\n🏆 Наиболее популярные зоны (за всё время):\n';
       stats.allTime.mostPopularZones.slice(0, 5).forEach((zone: any, index: number) => {
-        message += `  ${index + 1}. ${zone.name} - ${zone.visits} відвідувань\n`;
+        message += `  ${index + 1}. ${zone.name} - ${zone.visits} посещений\n`;
       });
     }
 
     bot.sendMessage(chatId, message);
   } catch (error: any) {
     console.error('Error in /global command:', error);
-    bot.sendMessage(chatId, '❌ Помилка отримання глобальної статистики.');
+    bot.sendMessage(chatId, '❌ Ошибка получения глобальной статистики.');
   }
 });
 
@@ -508,22 +530,22 @@ bot.onText(/\/top/, async msg => {
     const topPlayers = await apiRequest('GET', '/bot/top-players');
 
     if (!topPlayers || topPlayers.length === 0) {
-      bot.sendMessage(chatId, '📊 Поки що немає даних для топу гравців.');
+      bot.sendMessage(chatId, '📊 Пока нет данных для топа игроков.');
       return;
     }
 
-    let message = '🏆 Топ 10 гравців:\n\n';
+    let message = '🏆 Топ 10 игроков:\n\n';
 
     topPlayers.forEach((player: any, index: number) => {
       const name = player.characterName || player.username || `ID: ${player.telegramId}`;
       const level = player.characterLevel ? ` (Lv.${player.characterLevel})` : '';
-      message += `${index + 1}. ${name}${level} - ${player.totalVisits} відвідувань\n`;
+      message += `${index + 1}. ${name}${level} - ${player.totalVisits} посещений\n`;
     });
 
     bot.sendMessage(chatId, message);
   } catch (error: any) {
     console.error('Error in /top command:', error);
-    bot.sendMessage(chatId, '❌ Помилка отримання топу гравців.');
+    bot.sendMessage(chatId, '❌ Ошибка получения топа игроков.');
   }
 });
 
@@ -533,7 +555,7 @@ bot.onText(/\/zone\s+(.+)/, async (msg, match) => {
   const zoneName = match?.[1]?.trim();
 
   if (!zoneName) {
-    bot.sendMessage(chatId, '❌ Вкажіть назву зони. Приклад: /zone Zaken (Daytime)');
+    bot.sendMessage(chatId, '❌ Укажите название зоны. Пример: /zone Zaken (Daytime)');
     return;
   }
 
@@ -546,7 +568,7 @@ bot.onText(/\/zone\s+(.+)/, async (msg, match) => {
     if (!zone) {
       bot.sendMessage(
         chatId,
-        `❌ Зона "${zoneName}" не знайдена. Використайте /iz щоб побачити список доступних зон.`
+        `❌ Зона "${zoneName}" не найдена. Используйте /iz чтобы увидеть список доступных зон.`
       );
       return;
     }
@@ -554,26 +576,26 @@ bot.onText(/\/zone\s+(.+)/, async (msg, match) => {
     const zoneStats = await apiRequest('GET', `/statistics/zone/${zone.zoneId}`);
 
     let message = `📍 ${zone.name}\n\n`;
-    if (zone.bossName) message += `👹 Бос: ${zone.bossName}\n`;
-    if (zone.level) message += `📊 Рівень: ${zone.level}+\n`;
+    if (zone.bossName) message += `👹 Босс: ${zone.bossName}\n`;
+    if (zone.level) message += `📊 Уровень: ${zone.level}+\n`;
     if (zone.description) message += `📝 ${zone.description}\n`;
 
     message += '\n📈 Статистика:\n';
-    message += `  • Поточний період: ${zoneStats.currentPeriod?.visits || 0} відвідувань\n`;
-    message += `  • За весь час: ${zoneStats.allTime?.totalVisits || 0} відвідувань\n`;
+    message += `  • Текущий период: ${zoneStats.currentPeriod?.visits || 0} посещений\n`;
+    message += `  • За всё время: ${zoneStats.allTime?.totalVisits || 0} посещений\n`;
 
     if (zoneStats.allTime?.topVisitors && zoneStats.allTime.topVisitors.length > 0) {
-      message += '\n👥 Найактивніші гравці:\n';
+      message += '\n👥 Наиболее активные игроки:\n';
       zoneStats.allTime.topVisitors.slice(0, 5).forEach((user: any, index: number) => {
         const name = user.characterName || user.username || `ID: ${user.telegramId}`;
-        message += `  ${index + 1}. ${name} - ${user.totalVisits} разів\n`;
+        message += `  ${index + 1}. ${name} - ${user.totalVisits} раз\n`;
       });
     }
 
     bot.sendMessage(chatId, message);
   } catch (error: any) {
     console.error('Error in /zone command:', error);
-    bot.sendMessage(chatId, '❌ Помилка отримання інформації про зону.');
+    bot.sendMessage(chatId, '❌ Ошибка получения информации о зоне.');
   }
 });
 

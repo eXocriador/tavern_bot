@@ -138,7 +138,7 @@ const CreatePartyModal = ({ isOpen, onClose, onSuccess, instance }: CreatePartyM
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay create-party-modal-overlay" onClick={onClose}>
       <div className="modal-content create-party-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>{t('party.create')}</h2>

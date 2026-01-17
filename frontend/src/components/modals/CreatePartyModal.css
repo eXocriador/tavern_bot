@@ -1,25 +1,98 @@
+/* Full screen modal overlay for CreatePartyModal */
+.create-party-modal-overlay {
+  padding: 0 !important;
+  align-items: stretch !important;
+  background: transparent !important; /* Remove dark overlay */
+  backdrop-filter: none !important; /* Remove blur */
+}
+
 .create-party-modal {
-  max-width: 600px !important;
-  width: auto !important;
-  min-width: 400px;
+  max-width: none !important;
+  width: 100vw !important;
+  min-width: auto !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  border-radius: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+}
+
+.create-party-modal form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  padding: var(--spacing-lg);
+  padding-top: 0;
+  /* Hide scrollbar but keep scrolling */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.create-party-modal form::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.create-party-modal .modal-header {
+  flex-shrink: 0;
+}
+
+.create-party-modal .party-instance-info {
+  flex-shrink: 0;
+}
+
+.create-party-modal .party-users-section {
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 auto;
+  min-height: 0;
+  max-height: 50vh;
+}
+
+.create-party-modal .party-time-section {
+  flex-shrink: 0;
+}
+
+.create-party-modal .modal-actions {
+  flex-shrink: 0;
 }
 
 .party-instance-info {
   padding: var(--spacing-md) var(--spacing-lg);
   border-bottom: 2px solid var(--border-bronze);
   margin-bottom: var(--spacing-lg);
+  margin-left: calc(-1 * var(--spacing-lg));
+  margin-right: calc(-1 * var(--spacing-lg));
+  width: calc(100% + 2 * var(--spacing-lg));
 }
 
 .party-instance-info h3 {
   color: var(--accent-gold);
-  font-size: 1.1rem;
+  font-size: 1.8rem;
   font-weight: 700;
   font-family: 'Cinzel', 'Georgia', serif;
   margin: 0;
   text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px var(--shadow-gold);
 }
 
-.party-users-section,
+.create-party-modal .party-users-section {
+  margin-bottom: var(--spacing-lg);
+  padding: 0;
+}
+
 .party-time-section {
   margin-bottom: var(--spacing-lg);
 }
@@ -36,12 +109,22 @@
 }
 
 .users-list {
-  max-height: 300px;
+  flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   border: 2px solid var(--border-bronze);
   border-radius: var(--radius-md);
   padding: var(--spacing-sm);
   background: linear-gradient(135deg, var(--bg-panel) 0%, var(--bg-secondary) 100%);
+  min-height: 0;
+  max-height: 100%;
+  /* Hide scrollbar but keep scrolling */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.users-list::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 .user-item {
@@ -55,21 +138,12 @@
   border-radius: var(--radius-md);
   transition: all var(--transition-base);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
+  gap: var(--spacing-md);
 }
 
 .user-item::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, transparent 50%),
-    linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0%, transparent 50%);
-  pointer-events: none;
-  border-radius: inherit;
+  display: none;
 }
 
 .user-item:hover {
@@ -132,18 +206,7 @@
 }
 
 .btn-add-user::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.15), transparent);
-  transition: left 0.4s;
-}
-
-.btn-add-user:hover::before {
-  left: 100%;
+  display: none;
 }
 
 .btn-add-user svg {

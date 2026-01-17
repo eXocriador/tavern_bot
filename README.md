@@ -43,8 +43,15 @@ PORT=5001
 MONGODB_URI=mongodb://localhost:27017/tavern_bot
 TELEGRAM_BOT_TOKEN=your_bot_token_here
 TELEGRAM_BOT_USERNAME=your_bot_username
+TELEGRAM_CHAT_ID=your_chat_id_here
 NODE_ENV=development
 ```
+
+**Як дізнатися Chat ID:**
+1. Додайте бота до групи або надішліть йому повідомлення в приватних повідомленнях
+2. Напишіть боту команду `/chatid`
+3. Бот надішле вам ID чату
+4. Додайте цей ID до змінної `TELEGRAM_CHAT_ID` в `.env` файлі backend
 
 2. Запустити MongoDB (якщо локально):
 
@@ -111,10 +118,17 @@ yarn workspace tavern-bot-telegram dev
 
 - `/start` - привітання та список команд
 - `/iz` - показати статус (закриті та доступні інстанси)
-- `/iz @username` - показати статус іншого гравця
 - `/visit <назва_зони>` - відмітити відвідування зони
+- `/remove <назва_зони>` - видалити відвідування зони
 - `/stats` - моя статистика
-- `/stats @username` - статистика іншого гравця
+- `/profile` - мій профіль
+- `/level <число>` - оновити рівень персонажа
+- `/reset` - коли наступний ресет інстансів
+- `/global` - глобальна статистика
+- `/top` - топ 10 гравців
+- `/zone <назва_зони>` - детальна інформація про зону
+- `/chatid` - отримати ID чату (для налаштування)
+- `/help` - повний список команд
 
 ## Cron Job
 
