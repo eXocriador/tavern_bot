@@ -92,6 +92,12 @@ const Login = () => {
       try {
         const API_URL = import.meta.env.VITE_API_URL || '/api';
 
+        console.log('Telegram Web App: Attempting authentication', {
+          hasInitData: !!initDataRaw,
+          initDataLength: initDataRaw?.length,
+          userId: initDataUnsafe?.user?.id,
+        });
+
         // Send raw initData string to backend for verification
         const response = await axios.post(
           `${API_URL}/auth/webapp`,
@@ -103,6 +109,9 @@ const Login = () => {
         );
 
         if (response.data?.success && response.data?.user) {
+          console.log('Telegram Web App: Authentication successful', {
+            telegramId: response.data.user.telegramId,
+          });
           // Save user and redirect immediately
           localStorage.setItem('user', JSON.stringify(response.data.user));
           window.location.replace('/'); // Use replace to avoid back button issues
@@ -118,10 +127,21 @@ const Login = () => {
           status,
           message,
           hasInitData: !!initDataRaw,
+          initDataLength: initDataRaw?.length,
           userId: initDataUnsafe?.user?.id,
+          errorDetails: error.response?.data,
         });
 
         setIsTelegramWebApp(false);
+
+        // Show user-friendly error message
+        if (status === 401) {
+          console.warn('Telegram Web App: Authentication failed - hash verification or expired');
+        } else if (status === 400) {
+          console.warn('Telegram Web App: Invalid request data');
+        } else {
+          console.warn('Telegram Web App: Server error during authentication');
+        }
         // Don't show alert - silently fall back to manual login
       }
     };

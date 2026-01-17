@@ -89,18 +89,20 @@ export const verifyTelegramAuth = async (
   }
 };
 
-// Dev mode middleware - reads telegramId from header (only in development)
-export const devAuth = async (
+// Web auth middleware - reads telegramId from header (works in all environments)
+// This is used for web app requests after user has logged in via Telegram Web App
+export const webAuth = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction
 ) => {
-  if (process.env.NODE_ENV === 'production') {
+  // Skip if user is already authenticated
+  if (req.user) {
     return next();
   }
 
   const telegramId = req.headers['x-telegram-id'] || req.query.telegramId;
-  if (telegramId && !req.user) {
+  if (telegramId) {
     try {
       const user = await User.findOne({ telegramId: Number(telegramId) });
       if (user) {
@@ -110,10 +112,27 @@ export const devAuth = async (
         };
       }
     } catch (error) {
-      // Ignore errors in dev mode
+      console.error('Web auth error:', error);
+      // Continue without authentication - requireAuth will catch it if needed
     }
   }
   next();
+};
+
+// Dev mode middleware - reads telegramId from header (only in development)
+// Kept for backward compatibility
+export const devAuth = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  // In production, just call webAuth
+  if (process.env.NODE_ENV === 'production') {
+    return webAuth(req, res, next);
+  }
+
+  // In development, use webAuth logic
+  return webAuth(req, res, next);
 };
 
 export const requireAuth = async (

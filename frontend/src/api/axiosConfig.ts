@@ -8,7 +8,8 @@ const apiClient = axios.create({
   baseURL: API_URL,
 });
 
-// Add request interceptor to include telegramId in headers for dev mode
+// Add request interceptor to include telegramId in headers for authentication
+// This allows the backend to identify the user for protected routes
 apiClient.interceptors.request.use((config) => {
   // Get user from localStorage
   const storedUser = localStorage.getItem('user');
@@ -16,7 +17,7 @@ apiClient.interceptors.request.use((config) => {
     try {
       const user = JSON.parse(storedUser);
       if (user.telegramId) {
-        // Add telegramId to headers for dev auth
+        // Add telegramId to headers for web auth middleware
         config.headers['x-telegram-id'] = user.telegramId.toString();
       }
     } catch (error) {
