@@ -1,18 +1,32 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useSearchParams, Link } from 'react-router-dom';
 import axios from 'axios';
-import './Register.css';
+import './SetPassword.css';
 
-const Register = () => {
-  const [telegramId, setTelegramId] = useState('');
+const SetPassword = () => {
+  const [searchParams] = useSearchParams();
+  const telegramIdParam = searchParams.get('telegramId');
+
+  const [telegramId, setTelegramId] = useState(telegramIdParam || '');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleRegister = async (e: React.FormEvent) => {
+  useEffect(() => {
+    if (telegramIdParam) {
+      setTelegramId(telegramIdParam);
+    }
+  }, [telegramIdParam]);
+
+  const handleSetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!telegramId) {
+      setError('Введите Telegram ID');
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError('Пароли не совпадают');
@@ -28,41 +42,35 @@ const Register = () => {
 
     try {
       const API_URL = import.meta.env.VITE_API_URL || '/api';
-      const response = await axios.post(`${API_URL}/auth/register`, {
+      const response = await axios.post(`${API_URL}/auth/set-password`, {
         telegramId: Number(telegramId),
         password,
       });
 
       if (response.data?.success) {
-        // Auto-login after registration (works for both new users and existing users setting password)
+        // Auto-login after setting password
         localStorage.setItem('user', JSON.stringify(response.data.user));
         window.location.href = '/';
       } else {
-        setError('Registration failed');
+        setError('Failed to set password');
       }
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Registration failed';
-      // If user already exists with password, suggest login
-      if (errorMessage.includes('already exists') && errorMessage.includes('login')) {
-        setError('Користувач вже існує. Будь ласка, увійдіть.');
-      } else {
-        setError(errorMessage);
-      }
+      setError(error.response?.data?.error || 'Failed to set password');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="register-container">
-      <div className="register-panel">
-        <div className="register-header">
-          <h1>Регистрация</h1>
-          <p className="register-subtitle">Создать новый аккаунт</p>
+    <div className="set-password-container">
+      <div className="set-password-panel">
+        <div className="set-password-header">
+          <h1>Установка пароля</h1>
+          <p className="set-password-subtitle">Установите пароль для вашего аккаунта</p>
         </div>
 
-        <form onSubmit={handleRegister} className="register-form">
-          <div className="register-input-group">
+        <form onSubmit={handleSetPassword} className="set-password-form">
+          <div className="set-password-input-group">
             <label htmlFor="telegramId">Telegram ID</label>
             <input
               id="telegramId"
@@ -71,14 +79,15 @@ const Register = () => {
               onChange={(e) => setTelegramId(e.target.value)}
               placeholder="Введите ваш Telegram ID"
               required
+              disabled={!!telegramIdParam}
               autoComplete="username"
             />
-            <p className="register-hint">
+            <p className="set-password-hint">
               Узнайте свой ID через бота: <code>/id</code>
             </p>
           </div>
 
-          <div className="register-input-group">
+          <div className="set-password-input-group">
             <label htmlFor="password">Пароль</label>
             <input
               id="password"
@@ -92,7 +101,7 @@ const Register = () => {
             />
           </div>
 
-          <div className="register-input-group">
+          <div className="set-password-input-group">
             <label htmlFor="confirmPassword">Подтвердите пароль</label>
             <input
               id="confirmPassword"
@@ -106,16 +115,16 @@ const Register = () => {
             />
           </div>
 
-          {error && <div className="register-error">{error}</div>}
+          {error && <div className="set-password-error">{error}</div>}
 
-          <button type="submit" className="register-button" disabled={loading}>
-            {loading ? 'Регистрация...' : 'Зарегистрироваться'}
+          <button type="submit" className="set-password-button" disabled={loading}>
+            {loading ? 'Установка...' : 'Установить пароль'}
           </button>
         </form>
 
-        <div className="register-links">
-          <Link to="/login" className="register-link">
-            Уже есть аккаунт? Войти
+        <div className="set-password-links">
+          <Link to="/login" className="set-password-link">
+            Вернуться к входу
           </Link>
         </div>
       </div>
@@ -123,4 +132,4 @@ const Register = () => {
   );
 };
 
-export default Register;
+export default SetPassword;

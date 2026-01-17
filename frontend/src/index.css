@@ -171,28 +171,22 @@ html {
   color: var(--bg-primary);
 }
 
-/* Scrollbar styling - L2 GoD Brown Style */
+/* Hide scrollbars globally - L2 GoD style */
 ::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
+  width: 0;
+  height: 0;
+  display: none;
 }
 
-::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-bronze);
-  box-shadow: inset var(--shadow-debossed);
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
 }
 
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, var(--accent-bronze) 0%, var(--accent-bronze-dark) 100%);
-  border: 1px solid var(--border-bronze);
-  box-shadow: var(--shadow-embossed);
-  border-radius: 2px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, var(--accent-bronze-light) 0%, var(--accent-bronze) 100%);
-  box-shadow: var(--shadow-glow);
+*::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+  width: 0;
+  height: 0;
 }
 
 /* L2 GoD Style - Brown Metallic Button Base */
@@ -259,19 +253,48 @@ html {
   box-shadow: var(--shadow-glow);
 }
 
-/* Prevent horizontal scroll */
+/* Prevent horizontal scroll and hide all scrollbars */
 html {
   overflow-x: hidden;
+  overflow-y: auto;
   width: 100%;
   max-width: 100vw;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+
+html::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 body {
   overflow-x: hidden;
+  overflow-y: auto;
   width: 100%;
   max-width: 100vw;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+
+body::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 #root {
   overflow-x: hidden;
+  overflow-y: auto;
   width: 100%;
   max-width: 100vw;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+#root::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }

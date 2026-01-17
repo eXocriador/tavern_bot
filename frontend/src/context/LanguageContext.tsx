@@ -26,11 +26,14 @@ const getNestedValue = (obj: any, path: string): string => {
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [language, setLanguageState] = useState<Language>(() => {
     const saved = localStorage.getItem('language') as Language;
-    return saved && ['en', 'ua', 'ru'].includes(saved) ? saved : 'ua';
+    return saved && ['en', 'ua', 'ru'].includes(saved) ? saved : 'en';
   });
 
   useEffect(() => {
     localStorage.setItem('language', language);
+    // Update HTML lang attribute for proper date picker localization
+    const htmlLang = language === 'ua' ? 'uk' : language === 'ru' ? 'ru' : 'en';
+    document.documentElement.lang = htmlLang;
   }, [language]);
 
   const setLanguage = (lang: Language) => {

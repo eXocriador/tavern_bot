@@ -23,7 +23,7 @@ interface CreatePartyModalProps {
 }
 
 const CreatePartyModal = ({ isOpen, onClose, onSuccess, instance }: CreatePartyModalProps) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [users, setUsers] = useState<UserWithCharacters[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
@@ -213,6 +213,7 @@ const CreatePartyModal = ({ isOpen, onClose, onSuccess, instance }: CreatePartyM
                 className="form-input"
                 required
                 disabled={loading}
+                lang={language === 'ua' ? 'uk' : language === 'ru' ? 'ru' : 'en'}
               />
               <input
                 type="time"

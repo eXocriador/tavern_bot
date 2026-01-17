@@ -3,7 +3,7 @@ import { BottomNav, Header } from './components/layout';
 import { ErrorBoundary } from './components/ui';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
-import { Dashboard, Login, Profile, Settings, Statistics, Register, ForgotPassword } from './pages';
+import { Dashboard, Login, Profile, Settings, Statistics, Register, ForgotPassword, SetPassword } from './pages';
 import './App.css';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -33,6 +33,7 @@ const AppRoutes = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/set-password" element={<SetPassword />} />
       <Route
         path="/"
         element={

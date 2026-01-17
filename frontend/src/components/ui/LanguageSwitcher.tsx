@@ -18,6 +18,13 @@ const LanguageSwitcher = ({ onLanguageChange }: LanguageSwitcherProps = {}) => {
   return (
     <div className="language-switcher">
       <button
+        className={language === 'en' ? 'active' : ''}
+        onClick={() => handleLanguageChange('en')}
+        title="English"
+      >
+        EN
+      </button>
+      <button
         className={language === 'ua' ? 'active' : ''}
         onClick={() => handleLanguageChange('ua')}
         title="Українська"
@@ -30,13 +37,6 @@ const LanguageSwitcher = ({ onLanguageChange }: LanguageSwitcherProps = {}) => {
         title="Русский"
       >
         RU
-      </button>
-      <button
-        className={language === 'en' ? 'active' : ''}
-        onClick={() => handleLanguageChange('en')}
-        title="English"
-      >
-        EN
       </button>
     </div>
   );

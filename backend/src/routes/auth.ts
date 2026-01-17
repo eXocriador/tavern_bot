@@ -165,6 +165,7 @@ router.post('/webapp', async (req: express.Request, res: Response) => {
 });
 
 // Register new user (web version only)
+// Also allows setting password for existing users without password
 router.post('/register', async (req: express.Request, res: Response) => {
   try {
     const { telegramId, password } = req.body;
@@ -182,12 +183,29 @@ router.post('/register', async (req: express.Request, res: Response) => {
     }
 
     // Check if user already exists
-    const existingUser = await User.findOne({ telegramId: Number(telegramId) });
+    const existingUser = await User.findOne({ telegramId: Number(telegramId) }).select('+password');
     if (existingUser) {
-      return res.status(400).json({ error: 'User with this Telegram ID already exists' });
+      // If user exists and already has password, return error
+      if (existingUser.password) {
+        return res.status(400).json({ error: 'User with this Telegram ID already exists. Please login instead.' });
+      }
+      // If user exists but has no password, set password
+      existingUser.password = password;
+      await existingUser.save();
+
+      return res.json({
+        success: true,
+        user: {
+          telegramId: existingUser.telegramId,
+          username: existingUser.username,
+          firstName: existingUser.firstName,
+          lastName: existingUser.lastName,
+          characterName: existingUser.characterName,
+        },
+      });
     }
 
-    // Create user with password
+    // Create new user with password
     const user = await User.create({
       telegramId: Number(telegramId),
       password,
@@ -229,7 +247,11 @@ router.post('/login', async (req: express.Request, res: Response) => {
 
     // Check if user has password set
     if (!user.password) {
-      return res.status(401).json({ error: 'Password not set. Please register first.' });
+      return res.status(401).json({
+        error: 'Password not set',
+        needsPassword: true,
+        message: 'Please set a password first. You can do this on the registration page.'
+      });
     }
 
     // Verify password
@@ -397,6 +419,55 @@ router.post('/reset-password', async (req: express.Request, res: Response) => {
     res.json({ success: true, message: 'Password reset successfully' });
   } catch (error) {
     console.error('Reset password error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Set password for existing user without password (no authentication required)
+router.post('/set-password', async (req: express.Request, res: Response) => {
+  try {
+    const { telegramId, password } = req.body;
+
+    if (!telegramId || !password) {
+      return res.status(400).json({ error: 'Telegram ID and password are required' });
+    }
+
+    if (isNaN(Number(telegramId))) {
+      return res.status(400).json({ error: 'Invalid Telegram ID' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+
+    // Find user and include password
+    const user = await User.findOne({ telegramId: Number(telegramId) }).select('+password');
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if user already has password
+    if (user.password) {
+      return res.status(400).json({ error: 'Password already set. Use change-password or reset-password instead.' });
+    }
+
+    // Set password
+    user.password = password;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Password set successfully',
+      user: {
+        telegramId: user.telegramId,
+        username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        characterName: user.characterName,
+      },
+    });
+  } catch (error) {
+    console.error('Set password error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
