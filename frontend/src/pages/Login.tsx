@@ -89,6 +89,12 @@ const Login = () => {
       try {
         const API_URL = import.meta.env.VITE_API_URL || '/api';
 
+        if (!webApp.initData) {
+          console.error('Telegram Web App: initData is empty');
+          setIsTelegramWebApp(false);
+          return;
+        }
+
         // Send initData string to backend for verification
         const response = await axios.post(`${API_URL}/auth/webapp`, {
           initData: webApp.initData, // Send raw initData string for verification
@@ -99,10 +105,17 @@ const Login = () => {
           // Update auth context
           localStorage.setItem('user', JSON.stringify(userData));
           window.location.href = '/'; // Force reload to update auth state
+        } else {
+          console.error('Telegram Web App auth: Invalid response', response.data);
+          setIsTelegramWebApp(false);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Telegram Web App auth failed:', error);
+        const errorMessage = error.response?.data?.error || error.message || 'Authentication failed';
+        console.error('Error details:', errorMessage);
         setIsTelegramWebApp(false);
+        // Show error to user
+        alert(`Помилка авторизації: ${errorMessage}`);
         // Fall back to regular login widget
       }
     };

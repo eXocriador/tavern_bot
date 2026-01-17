@@ -34,17 +34,25 @@ router.post('/webapp', async (req: express.Request, res: Response) => {
     const { initData } = req.body;
 
     if (!initData) {
+      console.error('Web App auth: initData is missing');
       return res.status(400).json({ error: 'initData is required' });
     }
 
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     if (!botToken) {
+      console.error('Web App auth: Bot token not configured');
       return res.status(500).json({ error: 'Bot token not configured' });
     }
 
     // Parse initData (format: "key=value&key=value&hash=...")
     const params = new URLSearchParams(initData);
     const hash = params.get('hash');
+
+    if (!hash) {
+      console.error('Web App auth: Hash is missing in initData');
+      return res.status(400).json({ error: 'Hash is missing in initData' });
+    }
+
     params.delete('hash');
 
     // Build data check string
@@ -65,21 +73,43 @@ router.post('/webapp', async (req: express.Request, res: Response) => {
       .digest('hex');
 
     if (calculatedHash !== hash) {
+      console.error('Web App auth: Hash verification failed', {
+        calculated: calculatedHash.substring(0, 10) + '...',
+        received: hash.substring(0, 10) + '...',
+      });
       return res.status(401).json({ error: 'Invalid authentication data' });
     }
 
     // Parse user data
     const userStr = params.get('user');
     if (!userStr) {
+      console.error('Web App auth: User data not found in initData');
       return res.status(400).json({ error: 'User data not found' });
     }
 
-    const userData = JSON.parse(userStr);
-    const authDate = parseInt(params.get('auth_date') || '0', 10) * 1000;
+    let userData;
+    try {
+      userData = JSON.parse(userStr);
+    } catch (error) {
+      console.error('Web App auth: Failed to parse user data', error);
+      return res.status(400).json({ error: 'Invalid user data format' });
+    }
+
+    if (!userData.id) {
+      console.error('Web App auth: User ID is missing');
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    const authDateStr = params.get('auth_date');
+    const authDate = authDateStr ? parseInt(authDateStr, 10) * 1000 : Date.now();
     const now = Date.now();
 
     // Check auth_date (should be within 24 hours for Web App)
-    if (now - authDate > 24 * 60 * 60 * 1000) {
+    if (authDateStr && now - authDate > 24 * 60 * 60 * 1000) {
+      console.error('Web App auth: Authentication expired', {
+        authDate: new Date(authDate).toISOString(),
+        now: new Date(now).toISOString(),
+      });
       return res.status(401).json({ error: 'Authentication expired' });
     }
 
