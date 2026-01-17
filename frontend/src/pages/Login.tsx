@@ -48,24 +48,46 @@ const Login = () => {
   // Auto-login via Telegram Web App
   useEffect(() => {
     const handleTelegramWebAppAuth = async () => {
-      // Check if running inside Telegram Web App
-      if (!window.Telegram?.WebApp) {
-        setIsTelegramWebApp(false);
-        return; // Not in Telegram, use regular login widget
+      // Wait a bit for Telegram Web App SDK to load
+      const checkTelegramWebApp = () => {
+        // Check if running inside Telegram Web App
+        const isInTelegram = window.Telegram?.WebApp !== undefined;
+
+        if (!isInTelegram) {
+          setIsTelegramWebApp(false);
+          return false;
+        }
+
+        const webApp = window.Telegram.WebApp;
+        setIsTelegramWebApp(true);
+        webApp.ready();
+        webApp.expand();
+
+        // Check if we have initData
+        if (!webApp.initData) {
+          console.log('No initData in Telegram Web App');
+          setIsTelegramWebApp(false);
+          return false;
+        }
+
+        const initData = webApp.initDataUnsafe;
+
+        // Check if we have user data
+        if (!initData.user || !initData.user.id) {
+          console.log('No user data in Telegram Web App');
+          setIsTelegramWebApp(false);
+          return false;
+        }
+
+        return true;
+      };
+
+      // Check immediately
+      if (!checkTelegramWebApp()) {
+        return;
       }
 
       const webApp = window.Telegram.WebApp;
-      setIsTelegramWebApp(true);
-      webApp.ready();
-      webApp.expand();
-
-      const initData = webApp.initDataUnsafe;
-
-      // Check if we have user data
-      if (!initData.user || !initData.user.id) {
-        console.log('No user data in Telegram Web App');
-        return; // No user data, fall back to widget
-      }
 
       try {
         const API_URL = import.meta.env.VITE_API_URL || '/api';
@@ -83,15 +105,25 @@ const Login = () => {
         }
       } catch (error) {
         console.error('Telegram Web App auth failed:', error);
+        setIsTelegramWebApp(false);
         // Fall back to regular login widget
       }
     };
 
+    // Try immediately
     handleTelegramWebAppAuth();
-  }, [login, navigate]);
+
+    // Also try after a short delay in case SDK loads late
+    const timeout = setTimeout(() => {
+      handleTelegramWebAppAuth();
+    }, 100);
+
+    return () => clearTimeout(timeout);
+  }, []);
 
   useEffect(() => {
-    if (useDevMode) return; // Skip widget loading in dev mode
+    // Don't load widget if we're in Telegram Web App or dev mode
+    if (useDevMode || isTelegramWebApp) return;
 
     // Telegram Login Widget callback
     window.onTelegramAuth = async (user: any) => {
@@ -114,7 +146,7 @@ const Login = () => {
     script.async = true;
 
     const container = document.getElementById('telegram-login-container');
-    if (container) {
+    if (container && !container.querySelector('script[src*="telegram-widget"]')) {
       container.appendChild(script);
     }
 
@@ -123,7 +155,7 @@ const Login = () => {
         container.removeChild(script);
       }
     };
-  }, [login, navigate, botName, useDevMode]);
+  }, [login, navigate, botName, useDevMode, isTelegramWebApp]);
 
   const handleDevLogin = async () => {
     if (!telegramId || isNaN(Number(telegramId))) {
