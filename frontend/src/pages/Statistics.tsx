@@ -11,20 +11,38 @@ const Statistics = () => {
   const [myStats, setMyStats] = useState<UserStatistics | null>(null);
   const [globalStats, setGlobalStats] = useState<GlobalStatistics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState<'personal' | 'global'>('personal');
 
   const loadStatistics = useCallback(async () => {
     try {
       setLoading(true);
-      const [myStatsData, globalStatsData] = await Promise.all([
+      setError('');
+      const [myStatsResult, globalStatsResult] = await Promise.allSettled([
         getMyStatistics(),
         getGlobalStatistics(),
       ]);
-      setMyStats(myStatsData);
-      setGlobalStats(globalStatsData);
+
+      if (myStatsResult.status === 'fulfilled') {
+        setMyStats(myStatsResult.value);
+      } else {
+        console.error('Error loading personal statistics:', myStatsResult.reason);
+        setMyStats(null);
+      }
+
+      if (globalStatsResult.status === 'fulfilled') {
+        setGlobalStats(globalStatsResult.value);
+      } else {
+        console.error('Error loading global statistics:', globalStatsResult.reason);
+        setGlobalStats(null);
+      }
+
+      if (myStatsResult.status === 'rejected' || globalStatsResult.status === 'rejected') {
+        setError(t('statistics.error'));
+      }
     } catch (error) {
       console.error('Error loading statistics:', error);
-      alert(t('statistics.error'));
+      setError(t('statistics.error'));
     } finally {
       setLoading(false);
     }
@@ -40,7 +58,7 @@ const Statistics = () => {
 
   return (
     <div className="statistics">
-      <main className="statistics-main">
+      <div className="statistics-tabs">
         <Tabs
           tabs={[
             { id: 'personal', label: t('statistics.personal') },
@@ -49,6 +67,9 @@ const Statistics = () => {
           activeTab={activeTab}
           onTabChange={(tabId) => setActiveTab(tabId as 'personal' | 'global')}
         />
+      </div>
+      <main className="statistics-main">
+        {error && <div className="stats-error">{error}</div>}
 
         {activeTab === 'personal' && myStats && (
           <div className="stats-content">
@@ -85,6 +106,10 @@ const Statistics = () => {
           </div>
         )}
 
+        {activeTab === 'personal' && !myStats && (
+          <div className="stats-empty">{t('statistics.error')}</div>
+        )}
+
         {activeTab === 'global' && globalStats && (
           <div className="stats-content">
             <div className="stats-section">
@@ -112,6 +137,10 @@ const Statistics = () => {
               </div>
             )}
           </div>
+        )}
+
+        {activeTab === 'global' && !globalStats && (
+          <div className="stats-empty">{t('statistics.error')}</div>
         )}
       </main>
     </div>

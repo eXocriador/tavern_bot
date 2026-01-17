@@ -2,6 +2,17 @@
   background: transparent;
 }
 
+.statistics-tabs {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+}
+
+.statistics-tabs .tabs-container {
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .statistics-main {
   max-width: 1200px;
   margin: 0 auto;
@@ -67,6 +78,22 @@
 
 .stats-section:last-child {
   margin-bottom: 0;
+}
+
+.stats-error,
+.stats-empty {
+  margin: var(--spacing-lg) 0;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: 2px solid var(--border-bronze);
+  background: linear-gradient(
+    135deg,
+    var(--bg-panel) 0%,
+    var(--bg-tertiary) 50%,
+    var(--bg-secondary) 100%
+  );
+  color: var(--text-secondary);
+  text-align: center;
 }
 
 .stats-section h2 {

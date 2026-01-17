@@ -153,6 +153,32 @@ router.delete('/visits/:telegramId/:zoneId', async (req: Request, res: Response)
       return res.status(404).json({ error: 'Visit not found' });
     }
 
+    // Update stats after deletion (all-time stats)
+    const remainingCount = await Visit.countDocuments({
+      userId: user._id,
+      zoneId: zone._id,
+    });
+
+    if (remainingCount === 0) {
+      await UserZoneStats.findOneAndDelete({
+        userId: user._id,
+        zoneId: zone._id,
+      });
+    } else {
+      const latestVisit = await Visit.findOne({
+        userId: user._id,
+        zoneId: zone._id,
+      }).sort({ visitedAt: -1 });
+
+      await UserZoneStats.findOneAndUpdate(
+        { userId: user._id, zoneId: zone._id },
+        {
+          totalVisits: remainingCount,
+          lastVisited: latestVisit?.visitedAt,
+        }
+      );
+    }
+
     res.json({ success: true, message: 'Visit removed' });
   } catch (error) {
     console.error('Bot remove visit error:', error);

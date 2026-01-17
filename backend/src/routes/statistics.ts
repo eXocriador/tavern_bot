@@ -149,6 +149,19 @@ router.get('/global', async (req: express.Request, res: Response) => {
       visits: zoneVisitCounts.get(zone._id.toString()) || 0,
     })).sort((a, b) => b.visits - a.visits);
 
+    // All-time zone popularity (from UserZoneStats)
+    const allTimeZoneCounts = new Map<string, number>();
+    allStats.forEach((stat) => {
+      const zoneId = (stat.zoneId as any)?._id?.toString() || stat.zoneId.toString();
+      allTimeZoneCounts.set(zoneId, (allTimeZoneCounts.get(zoneId) || 0) + stat.totalVisits);
+    });
+
+    const allTimeZonePopularity = allInstances.map((zone) => ({
+      zoneId: zone.zoneId,
+      name: zone.name,
+      visits: allTimeZoneCounts.get(zone._id.toString()) || 0,
+    })).sort((a, b) => b.visits - a.visits);
+
     // Active users count
     const activeUserIds = new Set(allVisits.map((v) => v.userId.toString()));
     const activeUsersCount = activeUserIds.size;
@@ -168,7 +181,7 @@ router.get('/global', async (req: express.Request, res: Response) => {
       },
       allTime: {
         totalVisits: allStats.reduce((sum, stat) => sum + stat.totalVisits, 0),
-        mostPopularZones: zonePopularity.slice(0, 5),
+        mostPopularZones: allTimeZonePopularity.slice(0, 5),
       },
     });
   } catch (error) {

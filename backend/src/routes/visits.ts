@@ -125,6 +125,32 @@ router.delete('/:zoneId', requireAuth, async (req: AuthRequest, res: Response) =
       return res.status(404).json({ error: 'Visit not found' });
     }
 
+    // Update stats after deletion (all-time stats)
+    const remainingCount = await Visit.countDocuments({
+      userId: req.user!._id,
+      zoneId: zone._id,
+    });
+
+    if (remainingCount === 0) {
+      await UserZoneStats.findOneAndDelete({
+        userId: req.user!._id,
+        zoneId: zone._id,
+      });
+    } else {
+      const latestVisit = await Visit.findOne({
+        userId: req.user!._id,
+        zoneId: zone._id,
+      }).sort({ visitedAt: -1 });
+
+      await UserZoneStats.findOneAndUpdate(
+        { userId: req.user!._id, zoneId: zone._id },
+        {
+          totalVisits: remainingCount,
+          lastVisited: latestVisit?.visitedAt,
+        }
+      );
+    }
+
     res.json({ success: true });
   } catch (error) {
     console.error('Remove visit error:', error);

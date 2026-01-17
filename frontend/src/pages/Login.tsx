@@ -4,26 +4,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import "./Login.css";
 
-declare global {
-	interface Window {
-		Telegram?: {
-			WebApp: {
-				initData: string;
-				initDataUnsafe: {
-					user?: {
-						id: number;
-						first_name?: string;
-						last_name?: string;
-						username?: string;
-					};
-				};
-				ready: () => void;
-				expand: () => void;
-			};
-		};
-	}
-}
-
 const Login = () => {
 	const { user } = useAuth();
 	const navigate = useNavigate();
@@ -31,8 +11,6 @@ const Login = () => {
 	const [password, setPassword] = useState("");
 	const [error, setError] = useState("");
 	const [loading, setLoading] = useState(false);
-	const [isTelegramWebApp, setIsTelegramWebApp] = useState(false);
-	const [sdkLoaded, setSdkLoaded] = useState(false);
 
 	useEffect(() => {
 		if (user) {
@@ -40,145 +18,7 @@ const Login = () => {
 		}
 	}, [user, navigate]);
 
-	// Load Telegram Web App SDK and wait for it to be ready
-	useEffect(() => {
-		// Check if SDK is already loaded
-		if (window.Telegram?.WebApp) {
-			console.log("Telegram Web App SDK already loaded");
-			setSdkLoaded(true);
-			return;
-		}
 
-		// Check if script is already being loaded
-		const existingScript = document.querySelector('script[src="https://telegram.org/js/telegram-web-app.js"]');
-		if (existingScript) {
-			console.log("Telegram Web App SDK script already exists, waiting for load...");
-			const handleLoad = () => {
-				console.log("Telegram Web App SDK loaded via existing script");
-				setSdkLoaded(true);
-			};
-			existingScript.addEventListener("load", handleLoad);
-			// Also check if already loaded (event might have fired)
-			if ((existingScript as HTMLScriptElement).src && window.Telegram?.WebApp) {
-				setSdkLoaded(true);
-			}
-			return () => {
-				existingScript.removeEventListener("load", handleLoad);
-			};
-		}
-
-		// Load the SDK
-		console.log("Loading Telegram Web App SDK...");
-		const script = document.createElement("script");
-		script.src = "https://telegram.org/js/telegram-web-app.js";
-		script.async = false;
-		
-		script.onload = () => {
-			console.log("Telegram Web App SDK loaded successfully");
-			setSdkLoaded(true);
-		};
-
-		script.onerror = () => {
-			console.error("Failed to load Telegram Web App SDK");
-			setSdkLoaded(true); // Set to true anyway to avoid infinite waiting
-		};
-
-		document.head.appendChild(script);
-
-		return () => {
-			// Cleanup if component unmounts
-		};
-	}, []);
-
-	// Auto-login via Telegram Web App
-	useEffect(() => {
-		if (!sdkLoaded) {
-			return;
-		}
-
-		const handleAutoLogin = async (retryCount: number = 0) => {
-			console.log(`Telegram Web App auto-login attempt ${retryCount + 1}`);
-
-			// Check if Telegram Web App is available
-			if (!window.Telegram?.WebApp) {
-				console.log("Telegram WebApp not available, showing login form");
-				setIsTelegramWebApp(false);
-				return;
-			}
-
-			const tgWebApp = window.Telegram.WebApp;
-			
-			// Initialize and expand
-			tgWebApp.ready();
-			tgWebApp.expand();
-
-			// Check for initData
-			const initDataRaw = tgWebApp.initData;
-			console.log("initData present:", !!initDataRaw && initDataRaw.trim() !== "");
-			
-			if (!initDataRaw || initDataRaw.trim() === "") {
-				console.log("No initData found, showing login form");
-				setIsTelegramWebApp(false);
-				return;
-			}
-
-			// Check for user data
-			const initDataUnsafe = tgWebApp.initDataUnsafe;
-			const userId = initDataUnsafe?.user?.id;
-			console.log("User ID from initDataUnsafe:", userId);
-
-			if (!userId) {
-				console.log("No user ID in initDataUnsafe, showing login form");
-				setIsTelegramWebApp(false);
-				return;
-			}
-
-			// We have valid initData and user ID
-			console.log("Valid Telegram Web App detected, attempting auto-login");
-			setIsTelegramWebApp(true);
-
-			try {
-				const API_URL = import.meta.env.VITE_API_URL || "/api";
-				console.log(`Sending auth request to ${API_URL}/auth/webapp`);
-				
-				const response = await axios.post(
-					`${API_URL}/auth/webapp`,
-					{ initData: initDataRaw },
-					{ headers: { "Content-Type": "application/json" }, timeout: 10000 },
-				);
-
-				console.log("Auth response:", response.data);
-
-				if (response.data?.success && response.data?.user) {
-					console.log("Auto-login successful, redirecting to dashboard");
-					localStorage.setItem("user", JSON.stringify(response.data.user));
-					window.location.replace("/");
-				} else {
-					console.log("Auto-login failed: invalid response, showing login form");
-					setIsTelegramWebApp(false);
-				}
-			} catch (error: any) {
-				console.error("Telegram Web App auth error:", error);
-				console.error("Error details:", error.response?.data || error.message);
-				
-				// On error, show login form
-				setIsTelegramWebApp(false);
-			}
-		};
-
-		// Initial attempt
-		handleAutoLogin(0);
-
-		// Retry with increasing delays if SDK was just loaded
-		const retries = [100, 300, 500];
-		const timeouts = retries.map((delay, index) => 
-			setTimeout(() => handleAutoLogin(index + 1), delay)
-		);
-
-		return () => {
-			timeouts.forEach(clearTimeout);
-		};
-	}, [sdkLoaded]);
 
 	const handleLogin = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -210,18 +50,6 @@ const Login = () => {
 			setLoading(false);
 		}
 	};
-
-	// Don't show login form if in Telegram Web App
-	if (isTelegramWebApp) {
-		return (
-			<div className="login-container">
-				<div className="login-loading">
-					<div className="login-spinner"></div>
-					<p>Загрузка...</p>
-				</div>
-			</div>
-		);
-	}
 
 	return (
 		<div className="login-container">
