@@ -177,6 +177,16 @@
   .stat-compact-value {
     font-size: 1.1rem;
   }
+
+  .dashboard-main {
+    padding: calc(var(--spacing-lg) + env(safe-area-inset-top)) var(--spacing-md)
+      var(--spacing-xl);
+  }
+
+  .instances-list h2 {
+    font-size: 1.25rem;
+    margin-bottom: var(--spacing-lg);
+  }
 }
 
 .dashboard-stats {

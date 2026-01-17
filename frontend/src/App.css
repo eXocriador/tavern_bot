@@ -3,7 +3,8 @@
   width: 100%;
   max-width: 100vw;
   min-height: calc(100vh - 80px);
-  padding-bottom: 80px;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  padding-top: env(safe-area-inset-top);
   box-sizing: border-box;
 }
 

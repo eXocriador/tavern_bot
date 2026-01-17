@@ -350,11 +350,22 @@
 
 @media (max-width: 768px) {
   .settings-main {
-    padding: 20px 15px;
+    padding: calc(var(--spacing-lg) + env(safe-area-inset-top)) var(--spacing-md)
+      var(--spacing-xl);
   }
 
   .settings-card {
-    padding: 20px;
+    padding: var(--spacing-lg);
+  }
+
+  .settings-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .btn-logout-icon {
+    align-self: flex-end;
   }
 
   .password-actions {

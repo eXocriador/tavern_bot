@@ -241,6 +241,29 @@
   font-weight: 600;
 }
 
+@media (max-width: 768px) {
+  .statistics-main {
+    padding: calc(var(--spacing-lg) + env(safe-area-inset-top)) var(--spacing-md)
+      var(--spacing-xl);
+  }
+
+  .stats-content {
+    padding: var(--spacing-lg);
+  }
+
+  .stats-grid {
+    flex-direction: column;
+  }
+
+  .stat-box {
+    width: 100%;
+  }
+
+  .stat-number-large {
+    font-size: 3rem;
+  }
+}
+
 .visited-list {
   display: flex;
   flex-direction: column;
