@@ -8,7 +8,7 @@ type Language = 'en' | 'ua' | 'ru';
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, string>) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -37,8 +37,14 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     setLanguageState(lang);
   };
 
-  const t = (key: string): string => {
-    return getNestedValue(translations[language], key);
+  const t = (key: string, params?: Record<string, string>): string => {
+    let translation = getNestedValue(translations[language], key);
+    if (params) {
+      Object.keys(params).forEach((paramKey) => {
+        translation = translation.replace(`{${paramKey}}`, params[paramKey]);
+      });
+    }
+    return translation;
   };
 
   return (

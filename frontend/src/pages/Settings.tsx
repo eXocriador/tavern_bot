@@ -9,7 +9,7 @@ import './Settings.css';
 
 const Settings = () => {
   const { logout } = useAuth();
-  const { language, setLanguage, t } = useLanguage();
+  const { setLanguage, t } = useLanguage();
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [timezone, setTimezone] = useState('UTC');
   const [saving, setSaving] = useState(false);
