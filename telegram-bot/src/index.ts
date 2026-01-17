@@ -14,6 +14,22 @@ if (!token) {
 
 const bot = new TelegramBot(token, { polling: true });
 
+// Set menu button to open web app
+const webAppUrl = process.env.WEB_APP_URL || 'https://bzaken.exocriador.dev';
+bot
+  .setChatMenuButton({
+    menu_button: {
+      type: 'web_app',
+      text: 'Открыть',
+      web_app: {
+        url: webAppUrl,
+      },
+    },
+  })
+  .catch(error => {
+    console.error('Error setting menu button:', error);
+  });
+
 // Helper function to make API requests
 const apiRequest = async (method: string, endpoint: string, data?: any) => {
   try {
@@ -40,6 +56,7 @@ const apiRequest = async (method: string, endpoint: string, data?: any) => {
 // Start command
 bot.onText(/\/start/, async msg => {
   const chatId = msg.chat.id;
+  const webAppUrl = process.env.WEB_APP_URL || 'https://bzaken.exocriador.dev';
   const welcomeMessage = `
 👋 Привет! Я Tavern Bot - помощник для отслеживания инстанс-зон Lineage 2.
 
@@ -50,7 +67,18 @@ bot.onText(/\/start/, async msg => {
 /help - Полный список команд
   `;
 
-  bot.sendMessage(chatId, welcomeMessage);
+  bot.sendMessage(chatId, welcomeMessage, {
+    reply_markup: {
+      inline_keyboard: [
+        [
+          {
+            text: '🌐 Открыть веб-приложение',
+            web_app: { url: webAppUrl },
+          },
+        ],
+      ],
+    },
+  });
 });
 
 // Help command
@@ -143,7 +171,8 @@ bot.onText(/\/iz/, async msg => {
 
     const totalInstances = instances.length;
     const visitedCount = visited.length;
-    const progressPercent = totalInstances > 0 ? Math.round((visitedCount / totalInstances) * 100) : 0;
+    const progressPercent =
+      totalInstances > 0 ? Math.round((visitedCount / totalInstances) * 100) : 0;
     message += `\n📈 <b>Прогресс:</b> ${visitedCount}/${totalInstances} (${progressPercent}%)`;
 
     bot.sendMessage(chatId, message, { parse_mode: 'HTML' });

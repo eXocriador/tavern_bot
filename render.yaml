@@ -41,3 +41,5 @@ services:
           property: host
         # Build full URL with https:// and /api path
         transform: https://${host}/api
+      - key: WEB_APP_URL
+        sync: false  # Set this in Render dashboard: https://bzaken.exocriador.dev
