@@ -6,6 +6,9 @@ export interface Profile {
   firstName?: string;
   lastName?: string;
   characterName?: string;
+  characterLevel?: number;
+  timezone?: string;
+  language?: string;
   createdAt: string;
 }
 
@@ -14,8 +17,13 @@ export const getProfile = async (): Promise<Profile> => {
   return response.data;
 };
 
-export const updateProfile = async (characterName: string): Promise<Profile> => {
-  const response = await apiClient.put('/profile', { characterName });
+export const updateProfile = async (data: {
+  characterName?: string;
+  characterLevel?: number;
+  timezone?: string;
+  language?: string;
+}): Promise<Profile> => {
+  const response = await apiClient.put('/profile', data);
   return response.data;
 };
 

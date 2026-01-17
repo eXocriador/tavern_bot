@@ -128,5 +128,131 @@ router.post('/visits/:telegramId/:zoneId', async (req, res) => {
   }
 });
 
+// Remove visit by telegramId and zoneId
+router.delete('/visits/:telegramId/:zoneId', async (req, res) => {
+  try {
+    const user = await User.findOne({ telegramId: parseInt(req.params.telegramId) });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const zone = await InstanceZone.findOne({ zoneId: req.params.zoneId });
+    if (!zone) {
+      return res.status(404).json({ error: 'Instance zone not found' });
+    }
+
+    const periodId = await getCurrentPeriod();
+
+    const visit = await Visit.findOneAndDelete({
+      userId: user._id,
+      zoneId: zone._id,
+      periodId,
+    });
+
+    if (!visit) {
+      return res.status(404).json({ error: 'Visit not found' });
+    }
+
+    res.json({ success: true, message: 'Visit removed' });
+  } catch (error) {
+    console.error('Bot remove visit error:', error);
+    res.status(500).json({ error: 'Failed to remove visit' });
+  }
+});
+
+// Get user by telegramId
+router.get('/user/:telegramId', async (req, res) => {
+  try {
+    const user = await User.findOne({ telegramId: parseInt(req.params.telegramId) });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({
+      telegramId: user.telegramId,
+      username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      characterName: user.characterName,
+      characterLevel: user.characterLevel,
+    });
+  } catch (error) {
+    console.error('Get bot user error:', error);
+    res.status(500).json({ error: 'Failed to fetch user' });
+  }
+});
+
+// Update user level by telegramId
+router.put('/user/:telegramId/level', async (req, res) => {
+  try {
+    const { level } = req.body;
+    const user = await User.findOne({ telegramId: parseInt(req.params.telegramId) });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (level < 1 || level > 100) {
+      return res.status(400).json({ error: 'Level must be between 1 and 100' });
+    }
+
+    user.characterLevel = level;
+    await user.save();
+
+    res.json({
+      telegramId: user.telegramId,
+      characterLevel: user.characterLevel,
+    });
+  } catch (error) {
+    console.error('Update bot user level error:', error);
+    res.status(500).json({ error: 'Failed to update level' });
+  }
+});
+
+// Get top players
+router.get('/top-players', async (req, res) => {
+  try {
+    const topPlayers = await UserZoneStats.aggregate([
+      {
+        $group: {
+          _id: '$userId',
+          totalVisits: { $sum: '$totalVisits' },
+        },
+      },
+      {
+        $sort: { totalVisits: -1 },
+      },
+      {
+        $limit: 10,
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'user',
+        },
+      },
+      {
+        $unwind: '$user',
+      },
+      {
+        $project: {
+          telegramId: '$user.telegramId',
+          username: '$user.username',
+          characterName: '$user.characterName',
+          characterLevel: '$user.characterLevel',
+          totalVisits: 1,
+        },
+      },
+    ]);
+
+    res.json(topPlayers);
+  } catch (error) {
+    console.error('Get top players error:', error);
+    res.status(500).json({ error: 'Failed to fetch top players' });
+  }
+});
+
 export default router;
 

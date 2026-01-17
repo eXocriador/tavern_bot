@@ -1,8 +1,11 @@
 import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import BottomNav from './components/BottomNav';
 import Dashboard from './components/Dashboard';
 import ErrorBoundary from './components/ErrorBoundary';
+import Header from './components/Header';
 import Login from './components/Login';
 import Profile from './components/Profile';
+import Settings from './components/Settings';
 import Statistics from './components/Statistics';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
@@ -20,7 +23,13 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/login" replace />;
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      <Header />
+      {children}
+      <BottomNav />
+    </>
+  );
 };
 
 const AppRoutes = () => {
@@ -48,6 +57,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <Statistics />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <Settings />
           </ProtectedRoute>
         }
       />

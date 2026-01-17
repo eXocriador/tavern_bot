@@ -1,29 +1,19 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useCallback, useEffect, useState } from 'react';
+
+import type { GlobalStatistics, UserStatistics } from '../api/statistics';
+import { getGlobalStatistics, getMyStatistics } from '../api/statistics';
 import { useLanguage } from '../context/LanguageContext';
-import LanguageSwitcher from './LanguageSwitcher';
-import {
-  getMyStatistics,
-  getGlobalStatistics,
-  UserStatistics,
-  GlobalStatistics,
-} from '../api/statistics';
+
 import './Statistics.css';
 
 const Statistics = () => {
-  const { user, logout } = useAuth();
   const { t } = useLanguage();
   const [myStats, setMyStats] = useState<UserStatistics | null>(null);
   const [globalStats, setGlobalStats] = useState<GlobalStatistics | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'personal' | 'global'>('personal');
 
-  useEffect(() => {
-    loadStatistics();
-  }, []);
-
-  const loadStatistics = async () => {
+  const loadStatistics = useCallback(async () => {
     try {
       setLoading(true);
       const [myStatsData, globalStatsData] = await Promise.all([
@@ -38,7 +28,11 @@ const Statistics = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
+
+  useEffect(() => {
+    loadStatistics();
+  }, [loadStatistics]);
 
   if (loading) {
     return <div className="loading">{t('common.loading')}</div>;
@@ -46,40 +40,7 @@ const Statistics = () => {
 
   return (
     <div className="statistics">
-      <header className="statistics-header">
-        <div className="header-content">
-          <h1>{t('statistics.title')}</h1>
-          <div className="header-actions">
-            <LanguageSwitcher />
-            <Link to="/" className="btn-secondary">
-              {t('statistics.home')}
-            </Link>
-            <Link to="/profile" className="btn-secondary">
-              {t('statistics.profile')}
-            </Link>
-            <button onClick={logout} className="btn-logout">
-              {t('statistics.logout')}
-            </button>
-          </div>
-        </div>
-      </header>
-
       <main className="statistics-main">
-        <div className="tabs">
-          <button
-            className={`tab ${activeTab === 'personal' ? 'active' : ''}`}
-            onClick={() => setActiveTab('personal')}
-          >
-            {t('statistics.personal')}
-          </button>
-          <button
-            className={`tab ${activeTab === 'global' ? 'active' : ''}`}
-            onClick={() => setActiveTab('global')}
-          >
-            {t('statistics.global')}
-          </button>
-        </div>
-
         {activeTab === 'personal' && myStats && (
           <div className="stats-content">
             <div className="stats-section">
@@ -113,12 +74,19 @@ const Statistics = () => {
                 <div className="most-visited">
                   <h3>{t('statistics.mostVisited')}</h3>
                   <div className="visited-list">
-                    {myStats.allTime.mostVisited.map((zone: any, index: number) => (
-                      <div key={index} className="visited-item">
-                        <span className="zone-name">{zone.zoneId.name}</span>
-                        <span className="visit-count">{zone.totalVisits} {t('statistics.times')}</span>
-                      </div>
-                    ))}
+                    {myStats.allTime.mostVisited
+                      .filter(zone => zone.zoneId?.name)
+                      .map(zone => (
+                        <div
+                          key={zone.zoneId?._id || zone.zoneId?.zoneId || Math.random()}
+                          className="visited-item"
+                        >
+                          <span className="zone-name">{zone.zoneId?.name}</span>
+                          <span className="visit-count">
+                            {zone.totalVisits} {t('statistics.times')}
+                          </span>
+                        </div>
+                      ))}
                   </div>
                 </div>
               )}
@@ -152,24 +120,44 @@ const Statistics = () => {
               <div className="stats-section">
                 <h2>{t('statistics.mostPopular')}</h2>
                 <div className="popularity-list">
-                  {globalStats.currentPeriod.zonePopularity.map(
-                    (zone: any, index: number) => (
-                      <div key={index} className="popularity-item">
-                        <span className="rank">#{index + 1}</span>
-                        <span className="zone-name">{zone.name}</span>
-                        <span className="visit-count">{zone.visits} {t('statistics.visits')}</span>
-                      </div>
-                    )
-                  )}
+                  {globalStats.currentPeriod.zonePopularity.map((zone, index) => (
+                    <div key={zone.zoneId || index} className="popularity-item">
+                      <span className="rank">#{index + 1}</span>
+                      <span className="zone-name">{zone.name}</span>
+                      <span className="visit-count">
+                        {zone.visits} {t('statistics.visits')}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
           </div>
         )}
+
+        <div className="tabs-container">
+          <button
+            type="button"
+            className={`tab ${activeTab === 'personal' ? 'active' : ''}`}
+            onClick={() => setActiveTab('personal')}
+            aria-pressed={activeTab === 'personal'}
+            aria-label={t('statistics.personal')}
+          >
+            {t('statistics.personal')}
+          </button>
+          <button
+            type="button"
+            className={`tab ${activeTab === 'global' ? 'active' : ''}`}
+            onClick={() => setActiveTab('global')}
+            aria-pressed={activeTab === 'global'}
+            aria-label={t('statistics.global')}
+          >
+            {t('statistics.global')}
+          </button>
+        </div>
       </main>
     </div>
   );
 };
 
 export default Statistics;
-

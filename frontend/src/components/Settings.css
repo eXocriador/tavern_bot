@@ -1,0 +1,160 @@
+.settings {
+  background: transparent;
+}
+
+.settings-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--spacing-xl) var(--spacing-lg);
+}
+
+.settings-card {
+  background: linear-gradient(
+    135deg,
+    var(--bg-panel) 0%,
+    var(--bg-tertiary) 50%,
+    var(--bg-secondary) 100%
+  );
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-panel);
+  border: 2px solid var(--border-bronze);
+  position: relative;
+}
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-xl);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 2px solid var(--border-bronze);
+}
+
+.settings-card h2 {
+  color: var(--accent-gold);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: 'Cinzel', 'Georgia', serif;
+}
+
+.settings-section {
+  margin-bottom: var(--spacing-xl);
+}
+
+.settings-section:last-child {
+  margin-bottom: 0;
+}
+
+.settings-section h3 {
+  color: var(--accent-gold);
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: var(--spacing-md);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: 'Cinzel', 'Georgia', serif;
+}
+
+.language-switcher-container {
+  padding: var(--spacing-sm) 0;
+}
+
+.btn-logout-icon {
+  padding: var(--spacing-sm);
+  border: 2px solid var(--border-bronze);
+  border-radius: var(--radius-md);
+  background: linear-gradient(
+    180deg,
+    var(--bg-tertiary) 0%,
+    var(--bg-secondary) 50%,
+    var(--bg-primary) 100%
+  );
+  color: var(--text-secondary);
+  cursor: pointer;
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-metal);
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-logout-icon::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.15), transparent);
+  transition: left 0.4s;
+}
+
+.btn-logout-icon:hover::before {
+  left: 100%;
+}
+
+.btn-logout-icon:hover {
+  color: var(--text-primary);
+  border-color: var(--border-gold);
+  box-shadow: var(--shadow-metal), 0 0 8px var(--shadow-gold);
+}
+
+.btn-logout-icon svg {
+  width: 24px;
+  height: 24px;
+  stroke: currentColor;
+  transition: all var(--transition-base);
+}
+
+.btn-logout-icon:hover svg {
+  stroke: var(--accent-gold);
+  filter: drop-shadow(0 0 4px var(--shadow-gold));
+}
+
+.timezone-select {
+  width: 100%;
+  padding: var(--spacing-md);
+  border: 2px solid var(--border-bronze);
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--bg-panel) 0%, var(--bg-secondary) 100%);
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-family: 'Crimson Text', 'Georgia', serif;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-debossed);
+}
+
+.timezone-select:focus {
+  outline: none;
+  border-color: var(--border-gold);
+  box-shadow: var(--shadow-debossed), 0 0 0 3px rgba(212, 175, 55, 0.2), var(--shadow-glow);
+}
+
+.timezone-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.timezone-select option {
+  background: var(--bg-panel);
+  color: var(--text-primary);
+}
+
+@media (max-width: 768px) {
+  .settings-main {
+    padding: 20px 15px;
+  }
+
+  .settings-card {
+    padding: 20px;
+  }
+}

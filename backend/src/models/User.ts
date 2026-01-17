@@ -6,6 +6,9 @@ export interface IUser extends Document {
   firstName?: string;
   lastName?: string;
   characterName?: string;
+  characterLevel?: number;
+  timezone?: string;
+  language?: string;
   createdAt: Date;
 }
 
@@ -20,6 +23,15 @@ const UserSchema = new Schema<IUser>({
   firstName: String,
   lastName: String,
   characterName: String,
+  characterLevel: Number,
+  timezone: {
+    type: String,
+    default: 'UTC',
+  },
+  language: {
+    type: String,
+    default: 'ua',
+  },
   createdAt: {
     type: Date,
     default: Date.now,

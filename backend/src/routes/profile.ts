@@ -17,6 +17,9 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
       firstName: user.firstName,
       lastName: user.lastName,
       characterName: user.characterName,
+      characterLevel: user.characterLevel,
+      timezone: user.timezone,
+      language: user.language,
       createdAt: user.createdAt,
     });
   } catch (error) {
@@ -27,7 +30,7 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
 
 router.put('/', requireAuth, async (req: AuthRequest, res) => {
   try {
-    const { characterName } = req.body;
+    const { characterName, characterLevel, timezone, language } = req.body;
 
     const user = await User.findById(req.user!._id);
     if (!user) {
@@ -36,8 +39,24 @@ router.put('/', requireAuth, async (req: AuthRequest, res) => {
 
     if (characterName !== undefined) {
       user.characterName = characterName;
-      await user.save();
     }
+
+    if (characterLevel !== undefined) {
+      const level = Number(characterLevel);
+      if (level >= 1 && level <= 100) {
+        user.characterLevel = level;
+      }
+    }
+
+    if (timezone !== undefined) {
+      user.timezone = timezone;
+    }
+
+    if (language !== undefined) {
+      user.language = language;
+    }
+
+    await user.save();
 
     res.json({
       telegramId: user.telegramId,
@@ -45,6 +64,9 @@ router.put('/', requireAuth, async (req: AuthRequest, res) => {
       firstName: user.firstName,
       lastName: user.lastName,
       characterName: user.characterName,
+      characterLevel: user.characterLevel,
+      timezone: user.timezone,
+      language: user.language,
       createdAt: user.createdAt,
     });
   } catch (error) {

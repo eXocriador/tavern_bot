@@ -1,0 +1,190 @@
+.create-party-modal {
+  max-width: 600px;
+}
+
+.party-instance-info {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 2px solid var(--border-bronze);
+  margin-bottom: var(--spacing-lg);
+}
+
+.party-instance-info h3 {
+  color: var(--accent-gold);
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-family: 'Cinzel', 'Georgia', serif;
+  margin: 0;
+  text-align: center;
+}
+
+.party-users-section,
+.party-time-section {
+  margin-bottom: var(--spacing-lg);
+}
+
+.party-users-section h4,
+.party-time-section h4 {
+  color: var(--accent-gold);
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-family: 'Cinzel', 'Georgia', serif;
+  margin-bottom: var(--spacing-md);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.users-list {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 2px solid var(--border-bronze);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
+  background: linear-gradient(135deg, var(--bg-panel) 0%, var(--bg-secondary) 100%);
+}
+
+.user-item {
+  padding: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
+}
+
+.user-item:last-child {
+  margin-bottom: 0;
+}
+
+.user-checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  cursor: pointer;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.user-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--accent-gold);
+}
+
+.user-name {
+  font-family: 'Cinzel', 'Georgia', serif;
+}
+
+.characters-select {
+  margin-top: var(--spacing-xs);
+  margin-left: 26px;
+}
+
+.character-select {
+  width: 100%;
+  padding: var(--spacing-sm);
+  border: 2px solid var(--border-bronze);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--bg-panel) 0%, var(--bg-secondary) 100%);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-family: 'Crimson Text', 'Georgia', serif;
+  cursor: pointer;
+}
+
+.character-select:focus {
+  outline: none;
+  border-color: var(--border-gold);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+}
+
+.time-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-md);
+}
+
+.time-inputs .form-input {
+  width: 100%;
+  padding: var(--spacing-md);
+  border: 2px solid var(--border-bronze);
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--bg-panel) 0%, var(--bg-secondary) 100%);
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-family: 'Crimson Text', 'Georgia', serif;
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-debossed);
+  box-sizing: border-box;
+}
+
+.time-inputs .form-input:focus {
+  outline: none;
+  border-color: var(--border-gold);
+  box-shadow: var(--shadow-debossed), 0 0 0 3px rgba(212, 175, 55, 0.2), var(--shadow-glow);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--spacing-xl);
+  padding-top: var(--spacing-lg);
+  border-top: 2px solid var(--border-bronze);
+}
+
+.modal-actions .btn-save {
+  padding: var(--spacing-md) var(--spacing-xl);
+  border: 2px solid var(--border-bronze);
+  border-radius: var(--radius-md);
+  background: linear-gradient(
+    180deg,
+    var(--bg-tertiary) 0%,
+    var(--bg-secondary) 50%,
+    var(--bg-primary) 100%
+  );
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: 'Cinzel', 'Georgia', serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-metal);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  max-width: 300px;
+}
+
+.modal-actions .btn-save::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.15), transparent);
+  transition: left 0.4s;
+}
+
+.modal-actions .btn-save:hover::before {
+  left: 100%;
+}
+
+.modal-actions .btn-save:hover {
+  border-color: var(--border-gold);
+  box-shadow: var(--shadow-metal), 0 0 8px var(--shadow-gold);
+}
+
+.modal-actions .btn-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .time-inputs {
+    grid-template-columns: 1fr;
+  }
+}

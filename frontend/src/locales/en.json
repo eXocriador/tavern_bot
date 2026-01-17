@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "Tavern Bot",
+    "title": "Tavern Helper",
     "subtitle": "Lineage 2 Instance Zone Tracker"
   },
   "login": {
@@ -16,7 +16,7 @@
     "checkId": "Check if the Telegram ID is correct"
   },
   "dashboard": {
-    "title": "Tavern Bot",
+    "title": "Home",
     "profile": "Profile",
     "statistics": "Statistics",
     "logout": "Logout",
@@ -26,10 +26,23 @@
     "instanceZones": "Instance Zones",
     "mark": "Mark",
     "visited": "✓ Visited",
+    "markAsVisited": "Mark as visited",
+    "markAsNotVisited": "Mark as not visited",
+    "noInstances": "No instances available",
     "boss": "Boss",
     "level": "Level",
     "loading": "Loading...",
-    "error": "Error loading data"
+    "error": "Error loading data",
+    "close": "Close",
+    "open": "Open",
+    "markAsPassed": "Mark as Passed",
+    "markAsNotPassed": "Mark as Not Passed",
+    "closeInstance": "Mark as Passed",
+    "closeConfirm": "Are you sure you want to mark instance {name} as closed?",
+    "passedConfirm": "Are you sure you want to mark instance {name} as passed?",
+    "errors": {
+      "closeFailed": "Failed to close instance"
+    }
   },
   "profile": {
     "title": "Profile",
@@ -42,8 +55,12 @@
     "name": "Name:",
     "registrationDate": "Registration Date:",
     "notSpecified": "Not specified",
+    "settings": "Settings",
     "characterName": "Character Name in Game",
     "characterNamePlaceholder": "Enter character name",
+    "characterLevel": "Character Level",
+    "characterLevelPlaceholder": "Enter level (1-100)",
+    "language": "Interface Language",
     "save": "Save",
     "saving": "Saving...",
     "updated": "Profile updated!",
@@ -56,11 +73,11 @@
     "home": "Home",
     "profile": "Profile",
     "logout": "Logout",
-    "personal": "My Statistics",
-    "global": "Global Statistics",
+    "personal": "Personal",
+    "global": "Global",
     "currentPeriod": "Current Period",
-    "zonesPassed": "Zones Passed",
-    "zonesAvailable": "Zones Available",
+    "zonesPassed": "Passed",
+    "zonesAvailable": "Available",
     "progress": "Progress",
     "allTime": "All Time",
     "totalVisits": "Total Visits",
@@ -75,11 +92,65 @@
     "loading": "Loading...",
     "error": "Error loading statistics"
   },
+  "settings": {
+    "title": "Settings",
+    "language": "Interface Language",
+    "account": "Account",
+    "logout": "Logout",
+    "logoutConfirm": "Are you sure you want to logout?"
+  },
+  "characters": {
+    "title": "Characters",
+    "create": "Create",
+    "createNew": "Create New",
+    "edit": "Edit",
+    "delete": "Delete",
+    "nickname": "Nickname",
+    "nicknamePlaceholder": "Enter nickname",
+    "profession": "Profession",
+    "professionPlaceholder": "Enter profession",
+    "level": "Level",
+    "levelShort": "Lvl",
+    "levelPlaceholder": "Enter level (1-100)",
+    "noCharacters": "You don't have any characters yet",
+    "deleteConfirm": "Are you sure you want to delete character {name}?",
+    "deleteMode": "Delete Mode",
+    "exitDeleteMode": "Exit Delete Mode",
+    "errors": {
+      "loadFailed": "Failed to load characters",
+      "saveFailed": "Failed to save character",
+      "deleteFailed": "Failed to delete character",
+      "nicknameRequired": "Nickname is required",
+      "professionRequired": "Profession is required",
+      "levelInvalid": "Level must be between 1 and 100"
+    }
+  },
+  "party": {
+    "create": "Create Party",
+    "invitePlayers": "Invite Players",
+    "selectCharacter": "Select Character",
+    "readyTime": "Ready Time",
+    "errors": {
+      "loadUsersFailed": "Failed to load users list",
+      "noUsersSelected": "Select at least one player",
+      "selectCharacters": "Select character for each player",
+      "timeRequired": "Specify ready time",
+      "createFailed": "Failed to create party"
+    }
+  },
   "common": {
     "loading": "Loading...",
     "error": "Error",
     "save": "Save",
+    "saving": "Saving...",
+    "creating": "Creating...",
+    "closing": "Closing...",
+    "marking": "Marking...",
     "cancel": "Cancel",
+    "delete": "Delete",
+    "deleting": "Deleting...",
+    "loggingOut": "Logging out...",
+    "close": "Close",
     "ok": "OK"
   }
 }

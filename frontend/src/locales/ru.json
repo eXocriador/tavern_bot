@@ -26,10 +26,24 @@
     "instanceZones": "Инстанс-зоны",
     "mark": "Отметить",
     "visited": "✓ Пройдено",
+    "markAsVisited": "Отметить как пройденный",
+    "markAsNotVisited": "Отметить как непройденный",
+    "noInstances": "Нет доступных инстансов",
     "boss": "Босс",
     "level": "Уровень",
     "loading": "Загрузка...",
-    "error": "Ошибка загрузки данных"
+    "error": "Ошибка загрузки данных",
+    "close": "Закрыть",
+    "open": "Открыть",
+    "passed": "Пройдено",
+    "markAsPassed": "Отметить как пройденный",
+    "markAsNotPassed": "Отметить как непройденный",
+    "closeInstance": "Отметить как пройденный",
+    "closeConfirm": "Вы уверены, что хотите отметить инстанс {name} как закрытый?",
+    "passedConfirm": "Вы уверены, что хотите отметить инстанс {name} как пройденный?",
+    "errors": {
+      "closeFailed": "Ошибка закрытия инстанса"
+    }
   },
   "profile": {
     "title": "Профиль",
@@ -42,8 +56,12 @@
     "name": "Имя:",
     "registrationDate": "Дата регистрации:",
     "notSpecified": "Не указано",
+    "settings": "Настройки",
     "characterName": "Имя персонажа в игре",
     "characterNamePlaceholder": "Введите имя персонажа",
+    "characterLevel": "Уровень персонажа",
+    "characterLevelPlaceholder": "Введите уровень (1-100)",
+    "language": "Язык интерфейса",
     "save": "Сохранить",
     "saving": "Сохранение...",
     "updated": "Профиль обновлен!",
@@ -56,8 +74,8 @@
     "home": "Главная",
     "profile": "Профиль",
     "logout": "Выйти",
-    "personal": "Моя статистика",
-    "global": "Общая статистика",
+    "personal": "Персональная",
+    "global": "Общая",
     "currentPeriod": "Текущий период",
     "zonesPassed": "Пройдено зон",
     "zonesAvailable": "Доступно зон",
@@ -75,11 +93,66 @@
     "loading": "Загрузка...",
     "error": "Ошибка загрузки статистики"
   },
+  "settings": {
+    "title": "Настройки",
+    "language": "Язык интерфейса",
+    "timezone": "Часовой пояс",
+    "account": "Аккаунт",
+    "logout": "Выйти",
+    "logoutConfirm": "Вы уверены, что хотите выйти?"
+  },
+  "characters": {
+    "title": "Персонажи",
+    "create": "Создать",
+    "createNew": "Создать нового",
+    "edit": "Редактировать",
+    "delete": "Удалить",
+    "nickname": "Никнейм",
+    "nicknamePlaceholder": "Введите никнейм",
+    "profession": "Профессия",
+    "professionPlaceholder": "Введите профессию",
+    "level": "Уровень",
+    "levelShort": "Ур",
+    "levelPlaceholder": "Введите уровень (1-100)",
+    "noCharacters": "У вас еще нет персонажей",
+    "deleteConfirm": "Вы уверены, что хотите удалить персонажа {name}?",
+    "deleteMode": "Режим удаления",
+    "exitDeleteMode": "Выйти из режима удаления",
+    "errors": {
+      "loadFailed": "Ошибка загрузки персонажей",
+      "saveFailed": "Ошибка сохранения персонажа",
+      "deleteFailed": "Ошибка удаления персонажа",
+      "nicknameRequired": "Никнейм обязателен",
+      "professionRequired": "Профессия обязательна",
+      "levelInvalid": "Уровень должен быть от 1 до 100"
+    }
+  },
+  "party": {
+    "create": "Создать сбор",
+    "invitePlayers": "Пригласить игроков",
+    "selectCharacter": "Выберите персонажа",
+    "readyTime": "Время готовности",
+    "errors": {
+      "loadUsersFailed": "Ошибка загрузки списка игроков",
+      "noUsersSelected": "Выберите хотя бы одного игрока",
+      "selectCharacters": "Выберите персонажа для каждого игрока",
+      "timeRequired": "Укажите время готовности",
+      "createFailed": "Ошибка создания сбора"
+    }
+  },
   "common": {
     "loading": "Загрузка...",
     "error": "Ошибка",
     "save": "Сохранить",
+    "saving": "Сохранение...",
+    "creating": "Создание...",
+    "closing": "Закрытие...",
+    "marking": "Отметка...",
     "cancel": "Отменить",
+    "delete": "Удалить",
+    "deleting": "Удаление...",
+    "loggingOut": "Выход...",
+    "close": "Закрыть",
     "ok": "OK"
   }
 }

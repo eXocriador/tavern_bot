@@ -9,6 +9,9 @@ import visitRoutes from './routes/visits';
 import profileRoutes from './routes/profile';
 import statisticsRoutes from './routes/statistics';
 import botRoutes from './routes/bot';
+import characterRoutes from './routes/characters';
+import partyRoutes from './routes/parties';
+import userRoutes from './routes/users';
 import { devAuth } from './middleware/auth';
 
 dotenv.config();
@@ -43,6 +46,9 @@ app.use('/api/visits', visitRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/statistics', statisticsRoutes);
 app.use('/api/bot', botRoutes);
+app.use('/api/characters', characterRoutes);
+app.use('/api/parties', partyRoutes);
+app.use('/api/users', userRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

@@ -16,13 +16,22 @@ router.get('/me', requireAuth, async (req: AuthRequest, res) => {
     const myVisits = await Visit.find({
       userId: req.user!._id,
       periodId,
-    }).populate('zoneId', 'zoneId name');
+    }).populate('zoneId', '_id zoneId name');
 
     const myStats = await UserZoneStats.find({
       userId: req.user!._id,
     }).populate('zoneId', 'zoneId name bossName');
 
-    const visitedZoneIds = new Set(myVisits.map((v) => v.zoneId.toString()));
+    const visitedZoneIds = new Set(
+      myVisits
+        .filter((v) => v.zoneId)
+        .map((v) => {
+          // After populate, zoneId is an object with _id property
+          const zoneIdObj = v.zoneId as any;
+          return zoneIdObj?._id?.toString() || null;
+        })
+        .filter((id): id is string => id !== null)
+    );
     const availableZones = allInstances.filter(
       (zone) => !visitedZoneIds.has(zone._id.toString())
     );
@@ -67,13 +76,21 @@ router.get('/user/:telegramId', async (req, res) => {
     const userVisits = await Visit.find({
       userId: user._id,
       periodId,
-    }).populate('zoneId', 'zoneId name');
+    }).populate('zoneId', '_id zoneId name');
 
     const userStats = await UserZoneStats.find({
       userId: user._id,
     }).populate('zoneId', 'zoneId name bossName');
 
-    const visitedZoneIds = new Set(userVisits.map((v) => v.zoneId.toString()));
+    const visitedZoneIds = new Set(
+      userVisits
+        .filter((v) => v.zoneId)
+        .map((v) => {
+          const zoneIdObj = v.zoneId as any;
+          return zoneIdObj?._id?.toString() || null;
+        })
+        .filter((id): id is string => id !== null)
+    );
     const availableZones = allInstances.filter(
       (zone) => !visitedZoneIds.has(zone._id.toString())
     );
