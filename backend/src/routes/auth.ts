@@ -1,4 +1,5 @@
 import express, { Response } from 'express';
+import crypto from 'crypto';
 import { verifyTelegramAuth, AuthRequest } from '../middleware/auth';
 import User from '../models/User';
 
@@ -23,6 +24,94 @@ router.post('/telegram', verifyTelegramAuth, async (req: AuthRequest, res: Respo
     });
   } catch (error) {
     console.error('Auth route error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Web App authentication (from Telegram Mini App)
+router.post('/webapp', async (req: express.Request, res: Response) => {
+  try {
+    const { initData } = req.body;
+
+    if (!initData) {
+      return res.status(400).json({ error: 'initData is required' });
+    }
+
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    if (!botToken) {
+      return res.status(500).json({ error: 'Bot token not configured' });
+    }
+
+    // Parse initData (format: "key=value&key=value&hash=...")
+    const params = new URLSearchParams(initData);
+    const hash = params.get('hash');
+    params.delete('hash');
+
+    // Build data check string
+    const dataCheckString = Array.from(params.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, value]) => `${key}=${value}`)
+      .join('\n');
+
+    // Verify hash
+    const secretKey = crypto
+      .createHash('sha256')
+      .update(botToken)
+      .digest();
+
+    const calculatedHash = crypto
+      .createHmac('sha256', secretKey)
+      .update(dataCheckString)
+      .digest('hex');
+
+    if (calculatedHash !== hash) {
+      return res.status(401).json({ error: 'Invalid authentication data' });
+    }
+
+    // Parse user data
+    const userStr = params.get('user');
+    if (!userStr) {
+      return res.status(400).json({ error: 'User data not found' });
+    }
+
+    const userData = JSON.parse(userStr);
+    const authDate = parseInt(params.get('auth_date') || '0', 10) * 1000;
+    const now = Date.now();
+
+    // Check auth_date (should be within 24 hours for Web App)
+    if (now - authDate > 24 * 60 * 60 * 1000) {
+      return res.status(401).json({ error: 'Authentication expired' });
+    }
+
+    // Find or create user
+    let user = await User.findOne({ telegramId: userData.id });
+    if (!user) {
+      user = await User.create({
+        telegramId: userData.id,
+        username: userData.username,
+        firstName: userData.first_name,
+        lastName: userData.last_name,
+      });
+    } else {
+      // Update user info
+      user.username = userData.username;
+      user.firstName = userData.first_name;
+      user.lastName = userData.last_name;
+      await user.save();
+    }
+
+    res.json({
+      success: true,
+      user: {
+        telegramId: user.telegramId,
+        username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        characterName: user.characterName,
+      },
+    });
+  } catch (error) {
+    console.error('Web App auth error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

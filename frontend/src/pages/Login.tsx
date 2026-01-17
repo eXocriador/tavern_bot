@@ -9,6 +9,24 @@ import './Login.css';
 declare global {
   interface Window {
     onTelegramAuth?: (user: any) => void;
+    Telegram?: {
+      WebApp: {
+        initData: string;
+        initDataUnsafe: {
+          user?: {
+            id: number;
+            first_name?: string;
+            last_name?: string;
+            username?: string;
+            language_code?: string;
+          };
+          auth_date: number;
+          hash: string;
+        };
+        ready: () => void;
+        expand: () => void;
+      };
+    };
   }
 }
 
@@ -19,12 +37,58 @@ const Login = () => {
   const botName = import.meta.env.VITE_TELEGRAM_BOT_NAME || 'your_bot_username';
   const [telegramId, setTelegramId] = useState('');
   const [useDevMode, setUseDevMode] = useState(false);
+  const [isTelegramWebApp, setIsTelegramWebApp] = useState(false);
 
   useEffect(() => {
     if (user) {
       navigate('/');
     }
   }, [user, navigate]);
+
+  // Auto-login via Telegram Web App
+  useEffect(() => {
+    const handleTelegramWebAppAuth = async () => {
+      // Check if running inside Telegram Web App
+      if (!window.Telegram?.WebApp) {
+        setIsTelegramWebApp(false);
+        return; // Not in Telegram, use regular login widget
+      }
+
+      const webApp = window.Telegram.WebApp;
+      setIsTelegramWebApp(true);
+      webApp.ready();
+      webApp.expand();
+
+      const initData = webApp.initDataUnsafe;
+
+      // Check if we have user data
+      if (!initData.user || !initData.user.id) {
+        console.log('No user data in Telegram Web App');
+        return; // No user data, fall back to widget
+      }
+
+      try {
+        const API_URL = import.meta.env.VITE_API_URL || '/api';
+
+        // Send initData string to backend for verification
+        const response = await axios.post(`${API_URL}/auth/webapp`, {
+          initData: webApp.initData, // Send raw initData string for verification
+        });
+
+        if (response.data.success && response.data.user) {
+          const userData = response.data.user;
+          // Update auth context
+          localStorage.setItem('user', JSON.stringify(userData));
+          window.location.href = '/'; // Force reload to update auth state
+        }
+      } catch (error) {
+        console.error('Telegram Web App auth failed:', error);
+        // Fall back to regular login widget
+      }
+    };
+
+    handleTelegramWebAppAuth();
+  }, [login, navigate]);
 
   useEffect(() => {
     if (useDevMode) return; // Skip widget loading in dev mode
@@ -130,13 +194,20 @@ const Login = () => {
           </div>
         ) : (
           <>
-            <div id="telegram-login-container"></div>
-            <button
-              onClick={() => setUseDevMode(true)}
-              className="dev-toggle"
-            >
-              {t('login.devMode')}
-            </button>
+            {!isTelegramWebApp && (
+              <>
+                <div id="telegram-login-container"></div>
+                <button
+                  onClick={() => setUseDevMode(true)}
+                  className="dev-toggle"
+                >
+                  {t('login.devMode')}
+                </button>
+              </>
+            )}
+            {isTelegramWebApp && (
+              <p className="hint">{t('common.loading')}</p>
+            )}
           </>
         )}
 
