@@ -33,7 +33,7 @@ export default async function handler(req: any, res: any) {
 		const bot = getBot();
 		await Promise.resolve(bot.processUpdate(req.body));
 		// Give async handlers a moment to complete before function exits.
-		await new Promise((resolve) => setTimeout(resolve, 300));
+		await new Promise((resolve) => setTimeout(resolve, 800));
 		res.status(200).json({ ok: true });
 	} catch (error) {
 		console.error("Webhook error:", error);

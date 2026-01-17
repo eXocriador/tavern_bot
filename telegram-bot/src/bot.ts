@@ -91,7 +91,7 @@ export const setupBotHandlers = (bot: TelegramBot) => {
 /help - Полный список команд
   `;
 
-		bot.sendMessage(chatId, welcomeMessage, {
+		await bot.sendMessage(chatId, welcomeMessage, {
 			reply_markup: {
 				inline_keyboard: [
 					[
@@ -122,7 +122,7 @@ export const setupBotHandlers = (bot: TelegramBot) => {
 /lvl 85
   `;
 
-		bot.sendMessage(chatId, helpMessage);
+		await bot.sendMessage(chatId, helpMessage);
 	});
 
 	// /iz command - show instance status
@@ -132,7 +132,7 @@ export const setupBotHandlers = (bot: TelegramBot) => {
 		try {
 			const telegramId = msg.from?.id;
 			if (!telegramId) {
-				bot.sendMessage(chatId, "❌ Ошибка идентификации пользователя.");
+				await bot.sendMessage(chatId, "❌ Ошибка идентификации пользователя.");
 				return;
 			}
 
@@ -187,10 +187,10 @@ export const setupBotHandlers = (bot: TelegramBot) => {
 					: 0;
 			message += `\n📈 <b>Прогресс:</b> ${visitedCount}/${totalInstances} (${progressPercent}%)`;
 
-			bot.sendMessage(chatId, message, { parse_mode: "HTML" });
+			await bot.sendMessage(chatId, message, { parse_mode: "HTML" });
 		} catch (error: any) {
 			console.error("Error in /iz command:", error);
-			bot.sendMessage(chatId, "❌ Ошибка получения статуса. Попробуйте позже.");
+			await bot.sendMessage(chatId, "❌ Ошибка получения статуса. Попробуйте позже.");
 		}
 	});
 
@@ -201,13 +201,13 @@ export const setupBotHandlers = (bot: TelegramBot) => {
 		try {
 			const telegramId = msg.from?.id;
 			if (!telegramId) {
-				bot.sendMessage(chatId, "❌ Ошибка идентификации пользователя.");
+				await bot.sendMessage(chatId, "❌ Ошибка идентификации пользователя.");
 				return;
 			}
 
 			const message = `🆔 Ваш Telegram ID:\n\n\`${telegramId}\`\n\n💡 Нажмите на ID выше, чтобы скопировать его.`;
 
-			bot.sendMessage(chatId, message, {
+			await bot.sendMessage(chatId, message, {
 				parse_mode: "Markdown",
 				reply_markup: {
 					inline_keyboard: [
@@ -222,7 +222,7 @@ export const setupBotHandlers = (bot: TelegramBot) => {
 			});
 		} catch (error: any) {
 			console.error("Error in /id command:", error);
-			bot.sendMessage(chatId, "❌ Ошибка получения ID.");
+			await bot.sendMessage(chatId, "❌ Ошибка получения ID.");
 		}
 	});
 
@@ -246,7 +246,7 @@ export const setupBotHandlers = (bot: TelegramBot) => {
 		try {
 			const telegramId = msg.from?.id;
 			if (!telegramId) {
-				bot.sendMessage(chatId, "❌ Ошибка идентификации пользователя.");
+				await bot.sendMessage(chatId, "❌ Ошибка идентификации пользователя.");
 				return;
 			}
 
@@ -281,7 +281,7 @@ export const setupBotHandlers = (bot: TelegramBot) => {
 			message += "/lvl <число> - обновить уровень\n";
 			message += "/id - получить ваш Telegram ID";
 
-			bot.sendMessage(chatId, message, {
+			await bot.sendMessage(chatId, message, {
 				parse_mode: "Markdown",
 				reply_markup: {
 					inline_keyboard: [
@@ -296,7 +296,7 @@ export const setupBotHandlers = (bot: TelegramBot) => {
 			});
 		} catch (error: any) {
 			console.error("Error in /profile command:", error);
-			bot.sendMessage(chatId, "❌ Ошибка получения профиля.");
+			await bot.sendMessage(chatId, "❌ Ошибка получения профиля.");
 		}
 	});
 
@@ -306,22 +306,22 @@ export const setupBotHandlers = (bot: TelegramBot) => {
 		const level = parseInt(match?.[1] || "0");
 
 		if (level < 1 || level > 100) {
-			bot.sendMessage(chatId, "❌ Уровень должен быть от 1 до 100.");
+			await bot.sendMessage(chatId, "❌ Уровень должен быть от 1 до 100.");
 			return;
 		}
 
 		try {
 			const telegramId = msg.from?.id;
 			if (!telegramId) {
-				bot.sendMessage(chatId, "❌ Ошибка идентификации пользователя.");
+				await bot.sendMessage(chatId, "❌ Ошибка идентификации пользователя.");
 				return;
 			}
 
 			await apiRequest("PUT", `/bot/user/${telegramId}/level`, { level });
-			bot.sendMessage(chatId, `✅ Уровень обновлен: ${level}`);
+			await bot.sendMessage(chatId, `✅ Уровень обновлен: ${level}`);
 		} catch (error: any) {
 			console.error("Error in /lvl command:", error);
-			bot.sendMessage(chatId, "❌ Ошибка обновления уровня.");
+			await bot.sendMessage(chatId, "❌ Ошибка обновления уровня.");
 		}
 	});
 
@@ -362,10 +362,10 @@ export const setupBotHandlers = (bot: TelegramBot) => {
 					});
 			}
 
-			bot.sendMessage(chatId, message);
+			await bot.sendMessage(chatId, message);
 		} catch (error: any) {
 			console.error("Error in /global command:", error);
-			bot.sendMessage(chatId, "❌ Ошибка получения глобальной статистики.");
+			await bot.sendMessage(chatId, "❌ Ошибка получения глобальной статистики.");
 		}
 	});
 
@@ -377,7 +377,7 @@ export const setupBotHandlers = (bot: TelegramBot) => {
 			const topPlayers = await apiRequest("GET", "/bot/top-players");
 
 			if (!topPlayers || topPlayers.length === 0) {
-				bot.sendMessage(chatId, "📊 Пока нет данных для топа игроков.");
+				await bot.sendMessage(chatId, "📊 Пока нет данных для топа игроков.");
 				return;
 			}
 
@@ -392,10 +392,10 @@ export const setupBotHandlers = (bot: TelegramBot) => {
 				message += `${index + 1}. ${name}${level} - ${player.totalVisits} посещений\n`;
 			});
 
-			bot.sendMessage(chatId, message);
+			await bot.sendMessage(chatId, message);
 		} catch (error: any) {
 			console.error("Error in /top command:", error);
-			bot.sendMessage(chatId, "❌ Ошибка получения топа игроков.");
+			await bot.sendMessage(chatId, "❌ Ошибка получения топа игроков.");
 		}
 	});
 
@@ -405,7 +405,7 @@ export const setupBotHandlers = (bot: TelegramBot) => {
 		const zoneName = match?.[1]?.trim();
 
 		if (!zoneName) {
-			bot.sendMessage(
+			await bot.sendMessage(
 				chatId,
 				"❌ Укажите название зоны. Пример: /zone Zaken (Daytime)",
 			);
@@ -419,7 +419,7 @@ export const setupBotHandlers = (bot: TelegramBot) => {
 			);
 
 			if (!zone) {
-				bot.sendMessage(
+				await bot.sendMessage(
 					chatId,
 					`❌ Зона "${zoneName}" не найдена. Используйте /iz чтобы увидеть список доступных зон.`,
 				);
@@ -454,10 +454,10 @@ export const setupBotHandlers = (bot: TelegramBot) => {
 					});
 			}
 
-			bot.sendMessage(chatId, message);
+			await bot.sendMessage(chatId, message);
 		} catch (error: any) {
 			console.error("Error in /zone command:", error);
-			bot.sendMessage(chatId, "❌ Ошибка получения информации о зоне.");
+			await bot.sendMessage(chatId, "❌ Ошибка получения информации о зоне.");
 		}
 	});
 };
