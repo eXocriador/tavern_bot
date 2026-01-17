@@ -19,10 +19,13 @@ apiClient.interceptors.request.use((config) => {
       if (user.telegramId) {
         // Add telegramId to headers for web auth middleware
         config.headers['x-telegram-id'] = user.telegramId.toString();
+        console.log(`[API-CLIENT] Added x-telegram-id header: ${user.telegramId} for ${config.method?.toUpperCase()} ${config.url}`);
       }
     } catch (error) {
-      // Ignore parsing errors
+      console.error('[API-CLIENT] Error parsing stored user:', error);
     }
+  } else {
+    console.log(`[API-CLIENT] No user in localStorage for ${config.method?.toUpperCase()} ${config.url}`);
   }
   return config;
 });

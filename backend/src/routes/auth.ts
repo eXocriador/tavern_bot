@@ -288,48 +288,64 @@ router.post('/change-password', async (req: express.Request, res: Response) => {
   try {
     const { oldPassword, newPassword } = req.body;
 
+    console.log('[CHANGE-PASSWORD] Request received');
+    console.log('[CHANGE-PASSWORD] Headers:', JSON.stringify(req.headers, null, 2));
+    console.log('[CHANGE-PASSWORD] Body keys:', Object.keys(req.body));
+
     if (!oldPassword || !newPassword) {
+      console.error('[CHANGE-PASSWORD] Missing required fields');
       return res.status(400).json({ error: 'Old password and new password are required' });
     }
 
     if (newPassword.length < 6) {
+      console.error('[CHANGE-PASSWORD] New password too short');
       return res.status(400).json({ error: 'New password must be at least 6 characters' });
     }
 
     const telegramId = req.headers['x-telegram-id'];
+    console.log(`[CHANGE-PASSWORD] Telegram ID from header: ${telegramId}`);
+
     if (!telegramId) {
-      console.error('Change password: No telegramId in headers');
-      console.error('Headers:', JSON.stringify(req.headers));
+      console.error('[CHANGE-PASSWORD] No telegramId in headers');
+      console.error('[CHANGE-PASSWORD] All headers:', JSON.stringify(req.headers, null, 2));
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    console.log(`Change password request for Telegram ID: ${telegramId}`);
+    console.log(`[CHANGE-PASSWORD] Change password request for Telegram ID: ${telegramId}`);
 
     // Find user with password
     const user = await User.findOne({ telegramId: Number(telegramId) }).select('+password');
     if (!user) {
-      console.error(`Change password: User not found for Telegram ID: ${telegramId}`);
+      console.error(`[CHANGE-PASSWORD] User not found for Telegram ID: ${telegramId}`);
       return res.status(404).json({ error: 'User not found' });
     }
 
+    console.log(`[CHANGE-PASSWORD] User found for Telegram ID: ${telegramId}, has password: ${!!user.password}`);
+
     // Check if user has password set
     if (!user.password) {
+      console.error(`[CHANGE-PASSWORD] Password not set for Telegram ID: ${telegramId}`);
       return res.status(400).json({ error: 'Password not set. Please set password first.' });
     }
 
     // Verify old password
+    console.log(`[CHANGE-PASSWORD] Verifying old password for Telegram ID: ${telegramId}`);
     const isPasswordValid = await user.comparePassword(oldPassword);
     if (!isPasswordValid) {
+      console.error(`[CHANGE-PASSWORD] Invalid old password for Telegram ID: ${telegramId}`);
       return res.status(401).json({ error: 'Invalid old password' });
     }
+
+    console.log(`[CHANGE-PASSWORD] Old password verified, updating password for Telegram ID: ${telegramId}`);
 
     // Update password
     user.password = newPassword;
     await user.save();
 
+    console.log(`[CHANGE-PASSWORD] Password changed successfully for Telegram ID: ${telegramId}`);
     res.json({ success: true, message: 'Password changed successfully' });
   } catch (error) {
-    console.error('Change password error:', error);
+    console.error('[CHANGE-PASSWORD] Unexpected error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -339,50 +355,66 @@ router.post('/forgot-password', async (req: express.Request, res: Response) => {
   try {
     const { telegramId } = req.body;
 
+    console.log(`[FORGOT-PASSWORD] Request received for Telegram ID: ${telegramId}`);
+
     if (!telegramId || isNaN(Number(telegramId))) {
+      console.error(`[FORGOT-PASSWORD] Invalid Telegram ID: ${telegramId}`);
       return res.status(400).json({ error: 'Valid Telegram ID is required' });
     }
 
     const user = await User.findOne({ telegramId: Number(telegramId) });
     if (!user) {
+      console.log(`[FORGOT-PASSWORD] User not found for Telegram ID: ${telegramId}`);
       // Don't reveal if user exists for security
       return res.json({ success: true, message: 'If user exists, reset code will be sent' });
     }
 
-    // Generate 6-digit code
-    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+    console.log(`[FORGOT-PASSWORD] User found, generating reset code for Telegram ID: ${telegramId}`);
+
+    // Generate 4-digit code (1000-9999)
+    const resetCode = Math.floor(1000 + Math.random() * 9000).toString();
     user.passwordResetCode = resetCode;
     user.passwordResetExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
     await user.save();
+
+    console.log(`[FORGOT-PASSWORD] Reset code generated: ${resetCode}, expires at: ${user.passwordResetExpiry}`);
 
     // Send code via Telegram Bot
     try {
       const TelegramBot = require('node-telegram-bot-api');
       const botToken = process.env.TELEGRAM_BOT_TOKEN;
       if (!botToken) {
-        console.error('Forgot password: TELEGRAM_BOT_TOKEN not configured');
+        console.error('[FORGOT-PASSWORD] TELEGRAM_BOT_TOKEN not configured');
         return res.status(500).json({ error: 'Bot token not configured' });
       }
 
+      console.log(`[FORGOT-PASSWORD] Attempting to send message via Telegram Bot to user ${telegramId}`);
       const bot = new TelegramBot(botToken);
       await bot.sendMessage(
         Number(telegramId),
         `🔐 Код для восстановления пароля:\n\n\`${resetCode}\`\n\n⏱ Код действителен 15 минут.`,
         { parse_mode: 'Markdown' }
       );
-      console.log(`Password reset code sent to Telegram ID: ${telegramId}`);
+      console.log(`[FORGOT-PASSWORD] Password reset code sent successfully to Telegram ID: ${telegramId}`);
     } catch (botError: any) {
-      console.error('Error sending reset code via bot:', botError);
-      // If bot can't send message (user hasn't started chat), still return success for security
-      // But log the error for debugging
-      if (botError.response?.body?.error_code === 403) {
-        console.error(`Bot cannot send message to user ${telegramId}. User may need to start chat with bot first.`);
+      console.error('[FORGOT-PASSWORD] Error sending reset code via bot:', botError);
+      console.error('[FORGOT-PASSWORD] Error details:', JSON.stringify(botError.response?.body || botError.message));
+
+      // Check for 403 error (user hasn't started chat)
+      if (botError.response?.body?.error_code === 403 || botError.code === 'ETELEGRAM' && botError.response?.body?.error_code === 403) {
+        console.error(`[FORGOT-PASSWORD] Bot cannot send message to user ${telegramId}. User may need to start chat with bot first.`);
         return res.status(400).json({
           error: 'Cannot send code. Please start a chat with the bot first by sending /start command.',
           code: 'BOT_CHAT_REQUIRED'
         });
       }
-      // For other errors, still return success to not reveal if user exists
+
+      // For other errors, return error but don't reveal if user exists
+      console.error(`[FORGOT-PASSWORD] Failed to send reset code, but user exists. Returning generic error.`);
+      return res.status(500).json({
+        error: 'Failed to send reset code. Please try again later or contact support.',
+        code: 'SEND_FAILED'
+      });
     }
 
     res.json({
@@ -390,7 +422,7 @@ router.post('/forgot-password', async (req: express.Request, res: Response) => {
       message: 'Reset code has been sent to your Telegram',
     });
   } catch (error) {
-    console.error('Forgot password error:', error);
+    console.error('[FORGOT-PASSWORD] Unexpected error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -400,58 +432,79 @@ router.post('/reset-password', async (req: express.Request, res: Response) => {
   try {
     const { telegramId, newPassword, resetCode, oldPassword } = req.body;
 
+    console.log(`[RESET-PASSWORD] Request received for Telegram ID: ${telegramId}, hasCode: ${!!resetCode}, hasOldPassword: ${!!oldPassword}`);
+
     if (!telegramId || !newPassword) {
+      console.error('[RESET-PASSWORD] Missing required fields');
       return res.status(400).json({ error: 'Telegram ID and new password are required' });
     }
 
     if (newPassword.length < 6) {
+      console.error('[RESET-PASSWORD] New password too short');
       return res.status(400).json({ error: 'New password must be at least 6 characters' });
     }
 
     if (!resetCode && !oldPassword) {
+      console.error('[RESET-PASSWORD] Neither reset code nor old password provided');
       return res.status(400).json({ error: 'Either reset code or old password is required' });
     }
 
     const user = await User.findOne({ telegramId: Number(telegramId) }).select('+password');
     if (!user) {
+      console.error(`[RESET-PASSWORD] User not found for Telegram ID: ${telegramId}`);
       return res.status(404).json({ error: 'User not found' });
     }
 
+    console.log(`[RESET-PASSWORD] User found, stored reset code: ${user.passwordResetCode ? 'exists' : 'none'}, expiry: ${user.passwordResetExpiry || 'none'}`);
+
     // Verify reset code or old password
     if (resetCode) {
-      console.log(`Reset password: Verifying reset code for Telegram ID: ${telegramId}`);
-      if (!user.passwordResetCode || user.passwordResetCode !== resetCode) {
-        console.error(`Reset password: Invalid reset code for Telegram ID: ${telegramId}`);
+      console.log(`[RESET-PASSWORD] Verifying reset code for Telegram ID: ${telegramId}, provided code: ${resetCode}`);
+
+      if (!user.passwordResetCode) {
+        console.error(`[RESET-PASSWORD] No reset code stored for Telegram ID: ${telegramId}`);
+        return res.status(401).json({ error: 'No reset code found. Please request a new code.' });
+      }
+
+      if (user.passwordResetCode !== resetCode) {
+        console.error(`[RESET-PASSWORD] Invalid reset code for Telegram ID: ${telegramId}. Expected: ${user.passwordResetCode}, Got: ${resetCode}`);
         return res.status(401).json({ error: 'Invalid reset code' });
       }
+
       if (!user.passwordResetExpiry || user.passwordResetExpiry < new Date()) {
-        console.error(`Reset password: Reset code expired for Telegram ID: ${telegramId}`);
-        return res.status(401).json({ error: 'Reset code expired' });
+        console.error(`[RESET-PASSWORD] Reset code expired for Telegram ID: ${telegramId}. Expiry: ${user.passwordResetExpiry}, Now: ${new Date()}`);
+        return res.status(401).json({ error: 'Reset code expired. Please request a new code.' });
       }
-      console.log(`Reset password: Reset code verified for Telegram ID: ${telegramId}`);
+
+      console.log(`[RESET-PASSWORD] Reset code verified successfully for Telegram ID: ${telegramId}`);
     } else if (oldPassword) {
-      console.log(`Reset password: Verifying old password for Telegram ID: ${telegramId}`);
+      console.log(`[RESET-PASSWORD] Verifying old password for Telegram ID: ${telegramId}`);
+
       if (!user.password) {
-        console.error(`Reset password: Password not set for Telegram ID: ${telegramId}`);
-        return res.status(400).json({ error: 'Password not set' });
+        console.error(`[RESET-PASSWORD] Password not set for Telegram ID: ${telegramId}`);
+        return res.status(400).json({ error: 'Password not set. Please use reset code instead.' });
       }
+
       const isPasswordValid = await user.comparePassword(oldPassword);
       if (!isPasswordValid) {
-        console.error(`Reset password: Invalid old password for Telegram ID: ${telegramId}`);
+        console.error(`[RESET-PASSWORD] Invalid old password for Telegram ID: ${telegramId}`);
         return res.status(401).json({ error: 'Invalid old password' });
       }
-      console.log(`Reset password: Old password verified for Telegram ID: ${telegramId}`);
+
+      console.log(`[RESET-PASSWORD] Old password verified successfully for Telegram ID: ${telegramId}`);
     }
 
     // Update password
+    console.log(`[RESET-PASSWORD] Updating password for Telegram ID: ${telegramId}`);
     user.password = newPassword;
     user.passwordResetCode = undefined;
     user.passwordResetExpiry = undefined;
     await user.save();
 
+    console.log(`[RESET-PASSWORD] Password reset successfully for Telegram ID: ${telegramId}`);
     res.json({ success: true, message: 'Password reset successfully' });
   } catch (error) {
-    console.error('Reset password error:', error);
+    console.error('[RESET-PASSWORD] Unexpected error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
