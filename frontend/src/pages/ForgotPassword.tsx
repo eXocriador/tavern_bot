@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import apiClient from '../api/axiosConfig';
 import { useLanguage } from '../context/LanguageContext';
-import axios from 'axios';
 import './ForgotPassword.css';
 
 const ForgotPassword = () => {
@@ -24,8 +24,7 @@ const ForgotPassword = () => {
     setLoading(true);
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api';
-      await axios.post(`${API_URL}/auth/forgot-password`, {
+      await apiClient.post('/auth/forgot-password', {
         telegramId: Number(telegramId),
       });
 
@@ -56,8 +55,7 @@ const ForgotPassword = () => {
     setLoading(true);
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api';
-      const response = await axios.post(`${API_URL}/auth/reset-password`, {
+      const response = await apiClient.post('/auth/reset-password', {
         telegramId: Number(telegramId),
         newPassword,
         ...(useOldPassword

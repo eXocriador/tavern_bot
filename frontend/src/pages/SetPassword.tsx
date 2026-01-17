@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
+import apiClient from '../api/axiosConfig';
 import { useLanguage } from '../context/LanguageContext';
-import axios from 'axios';
 import './SetPassword.css';
 
 const SetPassword = () => {
@@ -43,8 +43,7 @@ const SetPassword = () => {
     setLoading(true);
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api';
-      const response = await axios.post(`${API_URL}/auth/set-password`, {
+      const response = await apiClient.post('/auth/set-password', {
         telegramId: Number(telegramId),
         password,
       });

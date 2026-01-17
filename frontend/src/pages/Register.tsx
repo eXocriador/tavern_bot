@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import apiClient from '../api/axiosConfig';
 import { useLanguage } from '../context/LanguageContext';
-import axios from 'axios';
 import './Register.css';
 
 const Register = () => {
@@ -29,8 +29,7 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api';
-      const response = await axios.post(`${API_URL}/auth/register`, {
+      const response = await apiClient.post('/auth/register', {
         telegramId: Number(telegramId),
         password,
       });

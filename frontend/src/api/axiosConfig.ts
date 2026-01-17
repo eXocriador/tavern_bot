@@ -1,7 +1,11 @@
 import axios from 'axios';
 
-// Use relative path for local dev (proxied by Vite), or env var for production
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+// Use env var when set; otherwise pick sensible defaults per environment.
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.MODE === 'development'
+    ? 'http://localhost:5001/api'
+    : 'https://tavern-bot-backend.onrender.com/api');
 
 // Create axios instance
 const apiClient = axios.create({

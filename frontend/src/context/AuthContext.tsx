@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import axios from 'axios';
+import apiClient from '../api/axiosConfig';
 
 interface User {
   telegramId: number;
@@ -19,9 +19,6 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// Use relative path for local dev (proxied by Vite), or env var for production
-const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -43,7 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (authData: any) => {
     try {
-      const response = await axios.post(`${API_URL}/auth/telegram`, authData);
+      const response = await apiClient.post('/auth/telegram', authData);
       const userData = response.data.user;
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));

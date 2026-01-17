@@ -1,5 +1,5 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
+import apiClient from "../api/axiosConfig";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import "./Login.css";
@@ -26,8 +26,7 @@ const Login = () => {
 		setLoading(true);
 
 		try {
-			const API_URL = import.meta.env.VITE_API_URL || "/api";
-			const response = await axios.post(`${API_URL}/auth/login`, {
+			const response = await apiClient.post("/auth/login", {
 				telegramId: Number(telegramId),
 				password,
 			});
