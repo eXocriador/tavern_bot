@@ -207,7 +207,7 @@ bot.onText(/\/id/, async (msg) => {
 			return;
 		}
 
-		const message = `🆔 Ваш Telegram ID:\n\n\`${telegramId};
+		const message = `🆔 Ваш Telegram ID:\n\n\`${telegramId}\`\n\n💡 Нажмите на ID выше, чтобы скопировать его.`;
 
     bot.sendMessage(chatId, message, {
       parse_mode: 'Markdown',
@@ -216,10 +216,7 @@ bot.onText(/\/id/, async (msg) => {
           [
             {
               text: '📋 Копировать ID',
-              callback_data: `;
-		copy_id_$;
-		telegramId;
-		`,
+              callback_data: `copy_id_${telegramId}`,
             },
           ],
         ],
@@ -233,17 +230,12 @@ bot.onText(/\/id/, async (msg) => {
 
 // Handle copy ID callback
 bot.on('callback_query', async query => {
-  const chatId = query.message?.chat.id;
   const data = query.data;
 
   if (data?.startsWith('copy_id_')) {
     const telegramId = data.replace('copy_id_', '');
     await bot.answerCallbackQuery(query.id, {
-      text: `;
-		ID;
-		$;
-		telegramId;
-		скопирован!`,
+      text: `ID ${telegramId} скопирован!`,
       show_alert: false,
     });
   }
@@ -267,55 +259,47 @@ bot.onText(/\/profile/, async msg => {
       msg.from?.last_name
     );
 
-    const user = await apiRequest('GET', ` /
-			bot /
-			user /
-			$;
-		telegramId;
-		`);
+    const user = await apiRequest('GET', `/bot/user/${telegramId}`);
 
     let message = '👤 Ваш профиль:\n\n';
-    message += `;
-		🆔 Telegram ID: \`$
-		user.telegramId;
-		\`\n`
-		if (user.username) message += `👤 Username: @${user.username}\n`;
-		if (user.firstName || user.lastName) {
-			message += `📝 Имя: ${user.firstName || ""} ${user.lastName || ""}\n`;
-		}
-		if (user.characterName) {
-			message += `🎮 Персонаж: ${user.characterName}\n`;
-		} else {
-			message += `🎮 Персонаж: Не указано\n`;
-		}
-		if (user.characterLevel) {
-			message += `📊 Уровень: ${user.characterLevel}\n`;
-		} else {
-			message += `📊 Уровень: Не указано\n`;
-		}
+    message += `🆔 Telegram ID: \`${user.telegramId}\`\n`;
+    if (user.username) message += `👤 Username: @${user.username}\n`;
+    if (user.firstName || user.lastName) {
+      message += `📝 Имя: ${user.firstName || ""} ${user.lastName || ""}\n`;
+    }
+    if (user.characterName) {
+      message += `🎮 Персонаж: ${user.characterName}\n`;
+    } else {
+      message += `🎮 Персонаж: Не указано\n`;
+    }
+    if (user.characterLevel) {
+      message += `📊 Уровень: ${user.characterLevel}\n`;
+    } else {
+      message += `📊 Уровень: Не указано\n`;
+    }
 
-		message +=
-			"\n💡 Для обновления профиля используйте веб-приложение или команду:\n";
-		message += "/lvl <число> - обновить уровень\n";
-		message += "/id - получить ваш Telegram ID";
+    message +=
+      "\n💡 Для обновления профиля используйте веб-приложение или команду:\n";
+    message += "/lvl <число> - обновить уровень\n";
+    message += "/id - получить ваш Telegram ID";
 
-		bot.sendMessage(chatId, message, {
-			parse_mode: "Markdown",
-			reply_markup: {
-				inline_keyboard: [
-					[
-						{
-							text: "📋 Копировать ID",
-							callback_data: `copy_id_${telegramId}`,
-						},
-					],
-				],
-			},
-		});
-	} catch (error: any) {
-		console.error("Error in /profile command:", error);
-		bot.sendMessage(chatId, "❌ Ошибка получения профиля.");
-	}
+    bot.sendMessage(chatId, message, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: "📋 Копировать ID",
+              callback_data: `copy_id_${telegramId}`,
+            },
+          ],
+        ],
+      },
+    });
+  } catch (error: any) {
+    console.error("Error in /profile command:", error);
+    bot.sendMessage(chatId, "❌ Ошибка получения профиля.");
+  }
 });
 
 // /lvl command - update character level
@@ -440,51 +424,6 @@ bot.onText(/\/zone\s+(.+)/, async (msg, match) => {
 			bot.sendMessage(
 				chatId,
 				`❌ Зона "${zoneName}" не найдена. Используйте /iz чтобы увидеть список доступных зон.`,
-			);
-			return;
-		}
-
-		const zoneStats = await apiRequest(
-			"GET",
-			`/statistics/zone/${zone.zoneId}`,
-		);
-
-		let message = `📍 ${zone.name}\n\n`;
-		if (zone.bossName) message += `👹 Босс: ${zone.bossName}\n`;
-		if (zone.level) message += `📊 Уровень: ${zone.level}+\n`;
-		if (zone.description) message += `📝 ${zone.description}\n`;
-
-		message += "\n📈 Статистика:\n";
-		message += `  • Текущий период: ${zoneStats.currentPeriod?.visits || 0} посещений\n`;
-		message += `  • За всё время: ${zoneStats.allTime?.totalVisits || 0} посещений\n`;
-
-		if (
-			zoneStats.allTime?.topVisitors &&
-			zoneStats.allTime.topVisitors.length > 0
-		) {
-			message += "\n👥 Наиболее активные игроки:\n";
-			zoneStats.allTime.topVisitors
-				.slice(0, 5)
-				.forEach((user: any, index: number) => {
-					const name =
-						user.characterName || user.username || `ID: ${user.telegramId}`;
-					message += `  ${index + 1}. ${name} - ${user.totalVisits} раз\n`;
-				});
-		}
-
-		bot.sendMessage(chatId, message);
-	} catch (error: any) {
-		console.error("Error in /zone command:", error);
-		bot.sendMessage(chatId, "❌ Ошибка получения информации о зоне.");
-	}
-});
-
-// Error handling
-bot.on("polling_error", (error) => {
-	console.error("Polling error:", error);
-});
-
-console.log("🤖 Telegram bot is running...");
 			);
 			return;
 		}

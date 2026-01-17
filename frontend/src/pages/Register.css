@@ -3,9 +3,11 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  max-height: 100vh;
   padding: var(--spacing-lg);
   background: transparent;
   position: relative;
+  overflow: hidden;
 }
 
 .register-panel {
@@ -216,10 +218,30 @@
 @media (max-width: 768px) {
   .register-container {
     padding: var(--spacing-md);
+    max-height: 100vh;
+    overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
   }
 
   .register-panel {
     padding: var(--spacing-lg);
+    max-height: calc(100vh - 2 * var(--spacing-md));
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .register-panel::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
   }
 
   .register-header h1 {
