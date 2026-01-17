@@ -5,7 +5,7 @@ import { getProfile, updateProfile } from '../api/profile';
 import LanguageSwitcher from '../components/ui/LanguageSwitcher';
 import TimezoneSelector from '../components/ui/TimezoneSelector';
 import LogoutConfirmModal from '../components/modals/LogoutConfirmModal';
-import axios from 'axios';
+import apiClient from '../api/axiosConfig';
 import './Settings.css';
 
 const Settings = () => {
@@ -104,8 +104,7 @@ const Settings = () => {
     setPasswordLoading(true);
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api';
-      await axios.post(`${API_URL}/auth/change-password`, {
+      await apiClient.post('/auth/change-password', {
         oldPassword,
         newPassword,
       });
@@ -136,8 +135,7 @@ const Settings = () => {
     setResetLoading(true);
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api';
-      await axios.post(`${API_URL}/auth/forgot-password`, {
+      await apiClient.post('/auth/forgot-password', {
         telegramId: user.telegramId,
       });
 
@@ -173,8 +171,7 @@ const Settings = () => {
     setResetLoading(true);
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api';
-      await axios.post(`${API_URL}/auth/reset-password`, {
+      await apiClient.post('/auth/reset-password', {
         telegramId: user?.telegramId,
         resetCode,
         newPassword: resetNewPassword,
