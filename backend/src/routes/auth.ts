@@ -1,10 +1,10 @@
-import express from 'express';
-import { verifyTelegramAuth } from '../middleware/auth';
+import express, { Response } from 'express';
+import { verifyTelegramAuth, AuthRequest } from '../middleware/auth';
 import User from '../models/User';
 
 const router = express.Router();
 
-router.post('/telegram', verifyTelegramAuth, async (req, res) => {
+router.post('/telegram', verifyTelegramAuth, async (req: AuthRequest, res: Response) => {
   try {
     const user = await User.findOne({ telegramId: req.body.id });
     if (!user) {
@@ -28,7 +28,7 @@ router.post('/telegram', verifyTelegramAuth, async (req, res) => {
 });
 
 // Dev mode login (only for development)
-router.post('/dev', async (req, res) => {
+router.post('/dev', async (req: express.Request, res: Response) => {
   try {
     if (process.env.NODE_ENV === 'production') {
       return res.status(403).json({ error: 'Dev mode not available in production' });

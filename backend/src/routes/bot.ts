@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import Visit from '../models/Visit';
 import InstanceZone from '../models/InstanceZone';
 import User from '../models/User';
@@ -8,7 +8,7 @@ import { getCurrentPeriod } from '../utils/period';
 const router = express.Router();
 
 // Ensure user exists (create if not exists)
-router.post('/ensure-user', async (req, res) => {
+router.post('/ensure-user', async (req: Request, res: Response) => {
   try {
     const { telegramId, username, firstName, lastName } = req.body;
 
@@ -43,7 +43,7 @@ router.post('/ensure-user', async (req, res) => {
 // These routes are for Telegram bot usage
 
 // Get visits for user by telegramId
-router.get('/visits/:telegramId', async (req, res) => {
+router.get('/visits/:telegramId', async (req: Request, res: Response) => {
   try {
     const user = await User.findOne({ telegramId: parseInt(req.params.telegramId) });
     if (!user) {
@@ -64,7 +64,7 @@ router.get('/visits/:telegramId', async (req, res) => {
 });
 
 // Mark visit by telegramId and zoneId
-router.post('/visits/:telegramId/:zoneId', async (req, res) => {
+router.post('/visits/:telegramId/:zoneId', async (req: Request, res: Response) => {
   try {
     const user = await User.findOne({ telegramId: parseInt(req.params.telegramId) });
     if (!user) {
@@ -129,7 +129,7 @@ router.post('/visits/:telegramId/:zoneId', async (req, res) => {
 });
 
 // Remove visit by telegramId and zoneId
-router.delete('/visits/:telegramId/:zoneId', async (req, res) => {
+router.delete('/visits/:telegramId/:zoneId', async (req: Request, res: Response) => {
   try {
     const user = await User.findOne({ telegramId: parseInt(req.params.telegramId) });
     if (!user) {
@@ -161,7 +161,7 @@ router.delete('/visits/:telegramId/:zoneId', async (req, res) => {
 });
 
 // Get user by telegramId
-router.get('/user/:telegramId', async (req, res) => {
+router.get('/user/:telegramId', async (req: Request, res: Response) => {
   try {
     const user = await User.findOne({ telegramId: parseInt(req.params.telegramId) });
     if (!user) {
@@ -183,7 +183,7 @@ router.get('/user/:telegramId', async (req, res) => {
 });
 
 // Update user level by telegramId
-router.put('/user/:telegramId/level', async (req, res) => {
+router.put('/user/:telegramId/level', async (req: Request, res: Response) => {
   try {
     const { level } = req.body;
     const user = await User.findOne({ telegramId: parseInt(req.params.telegramId) });
@@ -210,7 +210,7 @@ router.put('/user/:telegramId/level', async (req, res) => {
 });
 
 // Get top players
-router.get('/top-players', async (req, res) => {
+router.get('/top-players', async (req: Request, res: Response) => {
   try {
     const topPlayers = await UserZoneStats.aggregate([
       {

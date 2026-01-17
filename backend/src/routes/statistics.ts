@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Response } from 'express';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import Visit from '../models/Visit';
 import User from '../models/User';
@@ -9,7 +9,7 @@ import { getCurrentPeriod, getAllPeriods } from '../utils/period';
 const router = express.Router();
 
 // Get my statistics
-router.get('/me', requireAuth, async (req: AuthRequest, res) => {
+router.get('/me', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const periodId = await getCurrentPeriod();
     const allInstances = await InstanceZone.find();
@@ -64,7 +64,7 @@ router.get('/me', requireAuth, async (req: AuthRequest, res) => {
 });
 
 // Get statistics for specific user
-router.get('/user/:telegramId', async (req, res) => {
+router.get('/user/:telegramId', async (req: express.Request, res: Response) => {
   try {
     const user = await User.findOne({ telegramId: parseInt(req.params.telegramId) });
     if (!user) {
@@ -128,7 +128,7 @@ router.get('/user/:telegramId', async (req, res) => {
 });
 
 // Get global statistics
-router.get('/global', async (req, res) => {
+router.get('/global', async (req: express.Request, res: Response) => {
   try {
     const periodId = await getCurrentPeriod();
     const allInstances = await InstanceZone.find();
@@ -178,7 +178,7 @@ router.get('/global', async (req, res) => {
 });
 
 // Get statistics for specific zone
-router.get('/zone/:zoneId', async (req, res) => {
+router.get('/zone/:zoneId', async (req: express.Request, res: Response) => {
   try {
     const zone = await InstanceZone.findOne({ zoneId: req.params.zoneId });
     if (!zone) {
@@ -231,7 +231,7 @@ router.get('/zone/:zoneId', async (req, res) => {
 });
 
 // Get period history
-router.get('/periods', async (req, res) => {
+router.get('/periods', async (req: express.Request, res: Response) => {
   try {
     const periods = await getAllPeriods();
     res.json(periods);

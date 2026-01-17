@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Response } from 'express';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import Visit from '../models/Visit';
 import InstanceZone from '../models/InstanceZone';
@@ -9,7 +9,7 @@ import { getCurrentPeriod } from '../utils/period';
 const router = express.Router();
 
 // Get my visits for current period
-router.get('/me', requireAuth, async (req: AuthRequest, res) => {
+router.get('/me', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const periodId = await getCurrentPeriod();
     const visits = await Visit.find({
@@ -25,7 +25,7 @@ router.get('/me', requireAuth, async (req: AuthRequest, res) => {
 });
 
 // Get visits for specific user
-router.get('/user/:telegramId', async (req, res) => {
+router.get('/user/:telegramId', async (req: express.Request, res: Response) => {
   try {
     const user = await User.findOne({ telegramId: parseInt(req.params.telegramId) });
     if (!user) {
@@ -46,7 +46,7 @@ router.get('/user/:telegramId', async (req, res) => {
 });
 
 // Mark visit
-router.post('/:zoneId', requireAuth, async (req: AuthRequest, res) => {
+router.post('/:zoneId', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const zone = await InstanceZone.findOne({ zoneId: req.params.zoneId });
     if (!zone) {
@@ -106,7 +106,7 @@ router.post('/:zoneId', requireAuth, async (req: AuthRequest, res) => {
 });
 
 // Remove visit
-router.delete('/:zoneId', requireAuth, async (req: AuthRequest, res) => {
+router.delete('/:zoneId', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const zone = await InstanceZone.findOne({ zoneId: req.params.zoneId });
     if (!zone) {

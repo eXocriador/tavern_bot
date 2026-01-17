@@ -1,10 +1,10 @@
-import express from 'express';
+import express, { Response } from 'express';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import User from '../models/User';
 
 const router = express.Router();
 
-router.get('/', requireAuth, async (req: AuthRequest, res) => {
+router.get('/', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const user = await User.findById(req.user!._id);
     if (!user) {
@@ -28,7 +28,7 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
   }
 });
 
-router.put('/', requireAuth, async (req: AuthRequest, res) => {
+router.put('/', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const { characterName, characterLevel, timezone, language } = req.body;
 

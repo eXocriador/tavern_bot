@@ -1,11 +1,11 @@
-import express from 'express';
+import express, { Response } from 'express';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import Character from '../models/Character';
 
 const router = express.Router();
 
 // Get all characters for current user
-router.get('/', requireAuth, async (req: AuthRequest, res) => {
+router.get('/', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const characters = await Character.find({ userId: req.user!._id }).sort({
       createdAt: -1,
@@ -18,7 +18,7 @@ router.get('/', requireAuth, async (req: AuthRequest, res) => {
 });
 
 // Create a new character
-router.post('/', requireAuth, async (req: AuthRequest, res) => {
+router.post('/', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const { nickname, profession, level } = req.body;
 
@@ -47,7 +47,7 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
 });
 
 // Update a character
-router.put('/:id', requireAuth, async (req: AuthRequest, res) => {
+router.put('/:id', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const { nickname, profession, level } = req.body;
     const characterId = req.params.id;
@@ -86,7 +86,7 @@ router.put('/:id', requireAuth, async (req: AuthRequest, res) => {
 });
 
 // Delete a character
-router.delete('/:id', requireAuth, async (req: AuthRequest, res) => {
+router.delete('/:id', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const characterId = req.params.id;
 

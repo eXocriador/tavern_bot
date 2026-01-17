@@ -1,12 +1,12 @@
-import express from 'express';
-import { requireAuth } from '../middleware/auth';
+import express, { Request, Response } from 'express';
+import { requireAuth, AuthRequest } from '../middleware/auth';
 import User from '../models/User';
 import Character from '../models/Character';
 
 const router = express.Router();
 
 // Get all users with their characters
-router.get('/', requireAuth, async (req, res) => {
+router.get('/', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const users = await User.find({}, 'telegramId username').lean();
     const usersWithCharacters = await Promise.all(

@@ -1,9 +1,9 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import InstanceZone from '../models/InstanceZone';
 
 const router = express.Router();
 
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
     const instances = await InstanceZone.find().sort({ level: 1, name: 1 });
     res.json(instances);
@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/:zoneId', async (req, res) => {
+router.get('/:zoneId', async (req: Request, res: Response) => {
   try {
     const instance = await InstanceZone.findOne({ zoneId: req.params.zoneId });
     if (!instance) {

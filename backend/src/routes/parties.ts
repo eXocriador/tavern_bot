@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Response } from 'express';
 import axios from 'axios';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import Party from '../models/Party';
@@ -58,7 +58,7 @@ const formatTimeInTimezone = (date: Date, timezone: string = 'UTC'): string => {
 };
 
 // Create a new party
-router.post('/', requireAuth, async (req: AuthRequest, res) => {
+router.post('/', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const { zoneId, readyTime, invitedUserIds } = req.body;
 
@@ -163,7 +163,7 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
 });
 
 // Get all parties for current user
-router.get('/me', requireAuth, async (req: AuthRequest, res) => {
+router.get('/me', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const parties = await Party.find({
       $or: [
