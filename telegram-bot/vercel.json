@@ -1,9 +1,4 @@
 {
   "buildCommand": "echo \"skip build\"",
-  "functions": {
-    "api/**/*.ts": {
-      "runtime": "nodejs20.x"
-    }
-  },
   "outputDirectory": "public"
 }
