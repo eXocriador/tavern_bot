@@ -38,6 +38,6 @@ services:
         fromService:
           type: web
           name: tavern-bot-backend
-          property: url
-        # Append /api to the backend URL
-        transform: ${url}/api
+          property: host
+        # Build full URL with https:// and /api path
+        transform: https://${host}/api
