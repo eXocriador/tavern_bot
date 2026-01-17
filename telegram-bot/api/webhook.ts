@@ -16,6 +16,10 @@ export default async function handler(req: any, res: any) {
 		return;
 	}
 
+	const updateId = req.body?.update_id;
+	const messageText = req.body?.message?.text || req.body?.edited_message?.text;
+	console.log("Webhook update received:", { updateId, messageText });
+
 	const secretToken = process.env.TELEGRAM_WEBHOOK_SECRET;
 	if (
 		secretToken &&
@@ -27,7 +31,9 @@ export default async function handler(req: any, res: any) {
 
 	try {
 		const bot = getBot();
-		await bot.processUpdate(req.body);
+		await Promise.resolve(bot.processUpdate(req.body));
+		// Give async handlers a moment to complete before function exits.
+		await new Promise((resolve) => setTimeout(resolve, 300));
 		res.status(200).json({ ok: true });
 	} catch (error) {
 		console.error("Webhook error:", error);
