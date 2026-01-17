@@ -3,20 +3,21 @@
   gap: var(--spacing-sm);
   align-items: center;
   width: 100%;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 @media (max-width: 768px) {
   .language-switcher {
     flex-direction: row;
     gap: var(--spacing-xs);
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    justify-content: space-between;
   }
 
   .language-switcher button {
     flex: 1;
-    min-width: 60px;
-    max-width: 100px;
+    min-width: 0;
+    max-width: none;
   }
 }
 

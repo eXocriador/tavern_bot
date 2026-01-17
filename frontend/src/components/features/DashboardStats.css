@@ -1,9 +1,13 @@
 .dashboard-stats-compact {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--spacing-md);
   margin-bottom: var(--spacing-xl);
   width: 100%;
+}
+
+.dashboard-stats-compact .stat-compact:last-child {
+  grid-column: 1 / -1;
 }
 
 .stat-compact {
@@ -59,7 +63,6 @@
 
 @media (max-width: 768px) {
   .dashboard-stats-compact {
-    grid-template-columns: repeat(3, 1fr);
     gap: var(--spacing-sm);
   }
 
@@ -73,5 +76,15 @@
 
   .stat-compact-value {
     font-size: 1.1rem;
+  }
+}
+
+@media (min-width: 769px) {
+  .dashboard-stats-compact {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .dashboard-stats-compact .stat-compact:last-child {
+    grid-column: auto;
   }
 }
