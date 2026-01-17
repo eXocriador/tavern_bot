@@ -26,8 +26,15 @@ app.use(express.json());
 app.use(devAuth);
 
 // Connect to MongoDB
+const mongoUri = process.env.MONGODB_URI;
+if (!mongoUri) {
+  console.error('❌ MONGODB_URI environment variable is not set!');
+  console.error('Please set MONGODB_URI in Render Dashboard → Environment');
+  process.exit(1);
+}
+
 mongoose
-  .connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/tavern_bot')
+  .connect(mongoUri)
   .then(() => {
     console.log('✅ Connected to MongoDB');
 
@@ -36,6 +43,7 @@ mongoose
   })
   .catch((error) => {
     console.error('❌ MongoDB connection error:', error);
+    console.error('MongoDB URI:', mongoUri ? `${mongoUri.substring(0, 20)}...` : 'NOT SET');
     process.exit(1);
   });
 
