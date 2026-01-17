@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 import axios from 'axios';
 import './ForgotPassword.css';
 
 const ForgotPassword = () => {
+  const { t } = useLanguage();
   const [telegramId, setTelegramId] = useState('');
   const [resetCode, setResetCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -27,10 +29,10 @@ const ForgotPassword = () => {
         telegramId: Number(telegramId),
       });
 
-      setSuccess('Код отправлен в Telegram. Проверьте сообщения от бота.');
+      setSuccess(t('forgotPassword.codeSent'));
       setCodeSent(true);
     } catch (error: any) {
-      setError(error.response?.data?.error || 'Failed to request reset code');
+      setError(error.response?.data?.error || t('forgotPassword.errors.resetFailed'));
     } finally {
       setLoading(false);
     }
@@ -42,12 +44,12 @@ const ForgotPassword = () => {
     setSuccess('');
 
     if (newPassword !== confirmPassword) {
-      setError('Пароли не совпадают');
+      setError(t('forgotPassword.errors.mismatch'));
       return;
     }
 
     if (newPassword.length < 6) {
-      setError('Пароль должен быть не менее 6 символов');
+      setError(t('forgotPassword.errors.tooShort'));
       return;
     }
 
@@ -64,15 +66,15 @@ const ForgotPassword = () => {
       });
 
       if (response.data?.success) {
-        setSuccess('Пароль успешно изменен. Теперь вы можете войти.');
+        setSuccess(t('forgotPassword.passwordReset'));
         setTimeout(() => {
           window.location.href = '/login';
         }, 2000);
       } else {
-        setError('Failed to reset password');
+        setError(t('forgotPassword.errors.resetFailed'));
       }
     } catch (error: any) {
-      setError(error.response?.data?.error || 'Failed to reset password');
+      setError(error.response?.data?.error || t('forgotPassword.errors.resetFailed'));
     } finally {
       setLoading(false);
     }
@@ -82,20 +84,20 @@ const ForgotPassword = () => {
     <div className="forgot-password-container">
       <div className="forgot-password-panel">
         <div className="forgot-password-header">
-          <h1>Восстановление пароля</h1>
-          <p className="forgot-password-subtitle">Восстановить доступ к аккаунту</p>
+          <h1>{t('forgotPassword.title')}</h1>
+          <p className="forgot-password-subtitle">{t('forgotPassword.subtitle')}</p>
         </div>
 
         {!codeSent && !useOldPassword ? (
           <form onSubmit={handleRequestCode} className="forgot-password-form">
             <div className="forgot-password-input-group">
-              <label htmlFor="telegramId">Telegram ID</label>
+              <label htmlFor="telegramId">{t('forgotPassword.telegramId')}</label>
               <input
                 id="telegramId"
                 type="text"
                 value={telegramId}
                 onChange={(e) => setTelegramId(e.target.value)}
-                placeholder="Введите ваш Telegram ID"
+                placeholder={t('forgotPassword.telegramIdPlaceholder')}
                 required
               />
             </div>
@@ -104,7 +106,7 @@ const ForgotPassword = () => {
             {success && <div className="forgot-password-success">{success}</div>}
 
             <button type="submit" className="forgot-password-button" disabled={loading}>
-              {loading ? 'Отправка...' : 'Получить код'}
+              {loading ? t('forgotPassword.sending') : t('forgotPassword.requestCode')}
             </button>
 
             <button
@@ -112,19 +114,19 @@ const ForgotPassword = () => {
               className="forgot-password-toggle"
               onClick={() => setUseOldPassword(true)}
             >
-              Использовать старый пароль
+              {t('forgotPassword.useOldPassword')}
             </button>
           </form>
         ) : (
           <form onSubmit={handleResetPassword} className="forgot-password-form">
             <div className="forgot-password-input-group">
-              <label htmlFor="telegramId">Telegram ID</label>
+              <label htmlFor="telegramId">{t('forgotPassword.telegramId')}</label>
               <input
                 id="telegramId"
                 type="text"
                 value={telegramId}
                 onChange={(e) => setTelegramId(e.target.value)}
-                placeholder="Введите ваш Telegram ID"
+                placeholder={t('forgotPassword.telegramIdPlaceholder')}
                 required
                 disabled={codeSent}
               />
@@ -132,54 +134,54 @@ const ForgotPassword = () => {
 
             {useOldPassword ? (
               <div className="forgot-password-input-group">
-                <label htmlFor="oldPassword">Старый пароль</label>
+                <label htmlFor="oldPassword">{t('forgotPassword.oldPassword')}</label>
                 <input
                   id="oldPassword"
                   type="password"
                   value={oldPassword}
                   onChange={(e) => setOldPassword(e.target.value)}
-                  placeholder="Введите старый пароль"
+                  placeholder={t('forgotPassword.oldPasswordPlaceholder')}
                   required
                 />
               </div>
             ) : (
               <div className="forgot-password-input-group">
-                <label htmlFor="resetCode">Код восстановления</label>
+                <label htmlFor="resetCode">{t('forgotPassword.resetCode')}</label>
                 <input
                   id="resetCode"
                   type="text"
                   value={resetCode}
                   onChange={(e) => setResetCode(e.target.value)}
-                  placeholder="Введите код из Telegram"
+                  placeholder={t('forgotPassword.resetCodePlaceholder')}
                   required
                 />
                 <p className="forgot-password-hint">
-                  Код отправлен ботом в личные сообщения
+                  {t('forgotPassword.resetCodeHint')}
                 </p>
               </div>
             )}
 
             <div className="forgot-password-input-group">
-              <label htmlFor="newPassword">Новый пароль</label>
+              <label htmlFor="newPassword">{t('forgotPassword.newPassword')}</label>
               <input
                 id="newPassword"
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Минимум 6 символов"
+                placeholder={t('forgotPassword.newPasswordPlaceholder')}
                 required
                 minLength={6}
               />
             </div>
 
             <div className="forgot-password-input-group">
-              <label htmlFor="confirmPassword">Подтвердите пароль</label>
+              <label htmlFor="confirmPassword">{t('forgotPassword.confirmPassword')}</label>
               <input
                 id="confirmPassword"
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Повторите новый пароль"
+                placeholder={t('forgotPassword.confirmPasswordPlaceholder')}
                 required
                 minLength={6}
               />
@@ -189,7 +191,7 @@ const ForgotPassword = () => {
             {success && <div className="forgot-password-success">{success}</div>}
 
             <button type="submit" className="forgot-password-button" disabled={loading}>
-              {loading ? 'Изменение...' : 'Изменить пароль'}
+              {loading ? t('forgotPassword.resetting') : t('forgotPassword.resetButton')}
             </button>
 
             {!useOldPassword && (
@@ -201,7 +203,7 @@ const ForgotPassword = () => {
                   setResetCode('');
                 }}
               >
-                Запросить новый код
+                {t('forgotPassword.requestNewCode')}
               </button>
             )}
           </form>
@@ -209,7 +211,7 @@ const ForgotPassword = () => {
 
         <div className="forgot-password-links">
           <Link to="/login" className="forgot-password-link">
-            Вернуться к входу
+            {t('forgotPassword.backToLogin')}
           </Link>
         </div>
       </div>

@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 import axios from 'axios';
 import './SetPassword.css';
 
 const SetPassword = () => {
+  const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const telegramIdParam = searchParams.get('telegramId');
 
@@ -24,17 +26,17 @@ const SetPassword = () => {
     setError('');
 
     if (!telegramId) {
-      setError('Введите Telegram ID');
+      setError(t('setPassword.errors.telegramIdRequired'));
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Пароли не совпадают');
+      setError(t('setPassword.errors.mismatch'));
       return;
     }
 
     if (password.length < 6) {
-      setError('Пароль должен быть не менее 6 символов');
+      setError(t('setPassword.errors.tooShort'));
       return;
     }
 
@@ -48,14 +50,13 @@ const SetPassword = () => {
       });
 
       if (response.data?.success) {
-        // Auto-login after setting password
         localStorage.setItem('user', JSON.stringify(response.data.user));
         window.location.href = '/';
       } else {
-        setError('Failed to set password');
+        setError(t('setPassword.errors.setFailed'));
       }
     } catch (error: any) {
-      setError(error.response?.data?.error || 'Failed to set password');
+      setError(error.response?.data?.error || t('setPassword.errors.setFailed'));
     } finally {
       setLoading(false);
     }
@@ -65,36 +66,36 @@ const SetPassword = () => {
     <div className="set-password-container">
       <div className="set-password-panel">
         <div className="set-password-header">
-          <h1>Установка пароля</h1>
-          <p className="set-password-subtitle">Установите пароль для вашего аккаунта</p>
+          <h1>{t('setPassword.title')}</h1>
+          <p className="set-password-subtitle">{t('setPassword.subtitle')}</p>
         </div>
 
         <form onSubmit={handleSetPassword} className="set-password-form">
           <div className="set-password-input-group">
-            <label htmlFor="telegramId">Telegram ID</label>
+            <label htmlFor="telegramId">{t('setPassword.telegramId')}</label>
             <input
               id="telegramId"
               type="text"
               value={telegramId}
               onChange={(e) => setTelegramId(e.target.value)}
-              placeholder="Введите ваш Telegram ID"
+              placeholder={t('setPassword.telegramIdPlaceholder')}
               required
               disabled={!!telegramIdParam}
               autoComplete="username"
             />
             <p className="set-password-hint">
-              Узнайте свой ID через бота: <code>/id</code>
+              {t('setPassword.telegramIdHint')}
             </p>
           </div>
 
           <div className="set-password-input-group">
-            <label htmlFor="password">Пароль</label>
+            <label htmlFor="password">{t('setPassword.password')}</label>
             <input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Минимум 6 символов"
+              placeholder={t('setPassword.passwordPlaceholder')}
               required
               minLength={6}
               autoComplete="new-password"
@@ -102,13 +103,13 @@ const SetPassword = () => {
           </div>
 
           <div className="set-password-input-group">
-            <label htmlFor="confirmPassword">Подтвердите пароль</label>
+            <label htmlFor="confirmPassword">{t('setPassword.confirmPassword')}</label>
             <input
               id="confirmPassword"
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Повторите пароль"
+              placeholder={t('setPassword.confirmPasswordPlaceholder')}
               required
               minLength={6}
               autoComplete="new-password"
@@ -118,13 +119,13 @@ const SetPassword = () => {
           {error && <div className="set-password-error">{error}</div>}
 
           <button type="submit" className="set-password-button" disabled={loading}>
-            {loading ? 'Установка...' : 'Установить пароль'}
+            {loading ? t('setPassword.setting') : t('setPassword.setButton')}
           </button>
         </form>
 
         <div className="set-password-links">
           <Link to="/login" className="set-password-link">
-            Вернуться к входу
+            {t('setPassword.backToLogin')}
           </Link>
         </div>
       </div>

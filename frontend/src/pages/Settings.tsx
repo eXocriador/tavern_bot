@@ -5,15 +5,35 @@ import { getProfile, updateProfile } from '../api/profile';
 import LanguageSwitcher from '../components/ui/LanguageSwitcher';
 import TimezoneSelector from '../components/ui/TimezoneSelector';
 import LogoutConfirmModal from '../components/modals/LogoutConfirmModal';
+import axios from 'axios';
 import './Settings.css';
 
 const Settings = () => {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const { setLanguage, t } = useLanguage();
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [timezone, setTimezone] = useState('UTC');
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Password change state
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [passwordLoading, setPasswordLoading] = useState(false);
+
+  // Password reset state
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [resetCode, setResetCode] = useState('');
+  const [resetNewPassword, setResetNewPassword] = useState('');
+  const [resetConfirmPassword, setResetConfirmPassword] = useState('');
+  const [resetError, setResetError] = useState('');
+  const [resetSuccess, setResetSuccess] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+  const [codeSent, setCodeSent] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -61,6 +81,121 @@ const Settings = () => {
     setIsLogoutModalOpen(false);
   };
 
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    if (!oldPassword) {
+      setPasswordError(t('settings.passwordErrors.oldRequired'));
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError(t('settings.passwordErrors.mismatch'));
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setPasswordError(t('settings.passwordErrors.tooShort'));
+      return;
+    }
+
+    setPasswordLoading(true);
+
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || '/api';
+      await axios.post(`${API_URL}/auth/change-password`, {
+        oldPassword,
+        newPassword,
+      });
+
+      setPasswordSuccess(t('settings.passwordChanged'));
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setTimeout(() => {
+        setShowPasswordChange(false);
+        setPasswordSuccess('');
+      }, 2000);
+    } catch (error: any) {
+      setPasswordError(error.response?.data?.error || t('settings.passwordErrors.changeFailed'));
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  const handleRequestResetCode = async () => {
+    if (!user?.telegramId) {
+      setResetError('Telegram ID not found');
+      return;
+    }
+
+    setResetError('');
+    setResetSuccess('');
+    setResetLoading(true);
+
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || '/api';
+      await axios.post(`${API_URL}/auth/forgot-password`, {
+        telegramId: user.telegramId,
+      });
+
+      setResetSuccess(t('settings.codeSent'));
+      setCodeSent(true);
+    } catch (error: any) {
+      setResetError(error.response?.data?.error || t('settings.passwordErrors.resetFailed'));
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetError('');
+    setResetSuccess('');
+
+    if (!resetCode) {
+      setResetError(t('settings.passwordErrors.codeRequired'));
+      return;
+    }
+
+    if (resetNewPassword !== resetConfirmPassword) {
+      setResetError(t('settings.passwordErrors.mismatch'));
+      return;
+    }
+
+    if (resetNewPassword.length < 6) {
+      setResetError(t('settings.passwordErrors.tooShort'));
+      return;
+    }
+
+    setResetLoading(true);
+
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || '/api';
+      await axios.post(`${API_URL}/auth/reset-password`, {
+        telegramId: user?.telegramId,
+        resetCode,
+        newPassword: resetNewPassword,
+      });
+
+      setResetSuccess(t('settings.passwordReset'));
+      setResetCode('');
+      setResetNewPassword('');
+      setResetConfirmPassword('');
+      setTimeout(() => {
+        setShowPasswordReset(false);
+        setResetSuccess('');
+        setCodeSent(false);
+      }, 2000);
+    } catch (error: any) {
+      setResetError(error.response?.data?.error || t('settings.passwordErrors.invalidCode'));
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   return (
     <div className="settings">
       <main className="settings-main">
@@ -94,6 +229,172 @@ const Settings = () => {
                   onChange={handleTimezoneChange}
                   disabled={saving}
                 />
+              </div>
+
+              <div className="settings-section">
+                <h3>{t('settings.security')}</h3>
+
+                {!showPasswordChange ? (
+                  <button
+                    onClick={() => setShowPasswordChange(true)}
+                    className="btn-change-password"
+                  >
+                    {t('settings.changePassword')}
+                  </button>
+                ) : (
+                  <form onSubmit={handleChangePassword} className="password-change-form">
+                    <div className="password-input-group">
+                      <label htmlFor="oldPassword">{t('settings.oldPassword')}</label>
+                      <input
+                        id="oldPassword"
+                        type="password"
+                        value={oldPassword}
+                        onChange={(e) => setOldPassword(e.target.value)}
+                        placeholder={t('settings.oldPasswordPlaceholder')}
+                        required
+                        autoComplete="current-password"
+                      />
+                    </div>
+                    <div className="password-input-group">
+                      <label htmlFor="newPassword">{t('settings.newPassword')}</label>
+                      <input
+                        id="newPassword"
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder={t('settings.newPasswordPlaceholder')}
+                        required
+                        minLength={6}
+                        autoComplete="new-password"
+                      />
+                    </div>
+                    <div className="password-input-group">
+                      <label htmlFor="confirmPassword">{t('settings.confirmPassword')}</label>
+                      <input
+                        id="confirmPassword"
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder={t('settings.confirmPasswordPlaceholder')}
+                        required
+                        minLength={6}
+                        autoComplete="new-password"
+                      />
+                    </div>
+                    {passwordError && <div className="password-error">{passwordError}</div>}
+                    {passwordSuccess && <div className="password-success">{passwordSuccess}</div>}
+                    <div className="password-actions">
+                      <button type="submit" className="btn-save-password" disabled={passwordLoading}>
+                        {passwordLoading ? t('common.saving') : t('common.save')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowPasswordChange(false);
+                          setOldPassword('');
+                          setNewPassword('');
+                          setConfirmPassword('');
+                          setPasswordError('');
+                          setPasswordSuccess('');
+                        }}
+                        className="btn-cancel-password"
+                      >
+                        {t('common.cancel')}
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                <div className="password-reset-section">
+                  {!showPasswordReset ? (
+                    <>
+                      <p className="password-reset-description">{t('settings.resetPasswordDescription')}</p>
+                      <button
+                        onClick={() => setShowPasswordReset(true)}
+                        className="btn-reset-password"
+                      >
+                        {t('settings.resetPassword')}
+                      </button>
+                    </>
+                  ) : (
+                    <form onSubmit={handleResetPassword} className="password-reset-form">
+                      {!codeSent ? (
+                        <div className="reset-code-request">
+                          <button
+                            type="button"
+                            onClick={handleRequestResetCode}
+                            className="btn-request-code"
+                            disabled={resetLoading}
+                          >
+                            {resetLoading ? t('common.loading') : t('settings.requestCode')}
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="password-input-group">
+                            <label htmlFor="resetCode">{t('settings.resetCode')}</label>
+                            <input
+                              id="resetCode"
+                              type="text"
+                              value={resetCode}
+                              onChange={(e) => setResetCode(e.target.value)}
+                              placeholder={t('settings.resetCodePlaceholder')}
+                              required
+                            />
+                          </div>
+                          <div className="password-input-group">
+                            <label htmlFor="resetNewPassword">{t('settings.newPassword')}</label>
+                            <input
+                              id="resetNewPassword"
+                              type="password"
+                              value={resetNewPassword}
+                              onChange={(e) => setResetNewPassword(e.target.value)}
+                              placeholder={t('settings.newPasswordPlaceholder')}
+                              required
+                              minLength={6}
+                              autoComplete="new-password"
+                            />
+                          </div>
+                          <div className="password-input-group">
+                            <label htmlFor="resetConfirmPassword">{t('settings.confirmPassword')}</label>
+                            <input
+                              id="resetConfirmPassword"
+                              type="password"
+                              value={resetConfirmPassword}
+                              onChange={(e) => setResetConfirmPassword(e.target.value)}
+                              placeholder={t('settings.confirmPasswordPlaceholder')}
+                              required
+                              minLength={6}
+                              autoComplete="new-password"
+                            />
+                          </div>
+                          {resetError && <div className="password-error">{resetError}</div>}
+                          {resetSuccess && <div className="password-success">{resetSuccess}</div>}
+                          <div className="password-actions">
+                            <button type="submit" className="btn-save-password" disabled={resetLoading}>
+                              {resetLoading ? t('common.saving') : t('common.save')}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setShowPasswordReset(false);
+                                setResetCode('');
+                                setResetNewPassword('');
+                                setResetConfirmPassword('');
+                                setResetError('');
+                                setResetSuccess('');
+                                setCodeSent(false);
+                              }}
+                              className="btn-cancel-password"
+                            >
+                              {t('common.cancel')}
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </form>
+                  )}
+                </div>
               </div>
             </>
           )}

@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 import axios from 'axios';
 import './Register.css';
 
 const Register = () => {
+  const { t } = useLanguage();
   const [telegramId, setTelegramId] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -15,12 +17,12 @@ const Register = () => {
     setError('');
 
     if (password !== confirmPassword) {
-      setError('Пароли не совпадают');
+      setError(t('register.errors.mismatch'));
       return;
     }
 
     if (password.length < 6) {
-      setError('Пароль должен быть не менее 6 символов');
+      setError(t('register.errors.tooShort'));
       return;
     }
 
@@ -34,17 +36,15 @@ const Register = () => {
       });
 
       if (response.data?.success) {
-        // Auto-login after registration (works for both new users and existing users setting password)
         localStorage.setItem('user', JSON.stringify(response.data.user));
         window.location.href = '/';
       } else {
-        setError('Registration failed');
+        setError(t('register.errors.registrationFailed'));
       }
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Registration failed';
-      // If user already exists with password, suggest login
+      const errorMessage = error.response?.data?.error || t('register.errors.registrationFailed');
       if (errorMessage.includes('already exists') && errorMessage.includes('login')) {
-        setError('Користувач вже існує. Будь ласка, увійдіть.');
+        setError(t('register.errors.userExists'));
       } else {
         setError(errorMessage);
       }
@@ -57,35 +57,35 @@ const Register = () => {
     <div className="register-container">
       <div className="register-panel">
         <div className="register-header">
-          <h1>Регистрация</h1>
-          <p className="register-subtitle">Создать новый аккаунт</p>
+          <h1>{t('register.title')}</h1>
+          <p className="register-subtitle">{t('register.subtitle')}</p>
         </div>
 
         <form onSubmit={handleRegister} className="register-form">
           <div className="register-input-group">
-            <label htmlFor="telegramId">Telegram ID</label>
+            <label htmlFor="telegramId">{t('register.telegramId')}</label>
             <input
               id="telegramId"
               type="text"
               value={telegramId}
               onChange={(e) => setTelegramId(e.target.value)}
-              placeholder="Введите ваш Telegram ID"
+              placeholder={t('register.telegramIdPlaceholder')}
               required
               autoComplete="username"
             />
             <p className="register-hint">
-              Узнайте свой ID через бота: <code>/id</code>
+              {t('register.telegramIdHint')}
             </p>
           </div>
 
           <div className="register-input-group">
-            <label htmlFor="password">Пароль</label>
+            <label htmlFor="password">{t('register.password')}</label>
             <input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Минимум 6 символов"
+              placeholder={t('register.passwordPlaceholder')}
               required
               minLength={6}
               autoComplete="new-password"
@@ -93,13 +93,13 @@ const Register = () => {
           </div>
 
           <div className="register-input-group">
-            <label htmlFor="confirmPassword">Подтвердите пароль</label>
+            <label htmlFor="confirmPassword">{t('register.confirmPassword')}</label>
             <input
               id="confirmPassword"
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Повторите пароль"
+              placeholder={t('register.confirmPasswordPlaceholder')}
               required
               minLength={6}
               autoComplete="new-password"
@@ -109,13 +109,13 @@ const Register = () => {
           {error && <div className="register-error">{error}</div>}
 
           <button type="submit" className="register-button" disabled={loading}>
-            {loading ? 'Регистрация...' : 'Зарегистрироваться'}
+            {loading ? t('register.registering') : t('register.registerButton')}
           </button>
         </form>
 
         <div className="register-links">
           <Link to="/login" className="register-link">
-            Уже есть аккаунт? Войти
+            {t('register.loginLink')}
           </Link>
         </div>
       </div>

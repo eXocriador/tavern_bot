@@ -4,7 +4,7 @@
     "subtitle": "Відстеження інстанс-зон Lineage 2"
   },
   "login": {
-    "title": "Tavern Bot",
+    "title": "Вхід",
     "subtitle": "Відстеження інстанс-зон Lineage 2",
     "hint": "Увійдіть через Telegram, щоб почати відстежувати свої проходження інстансів",
     "devMode": "Або увійти через Telegram ID (для розробки)",
@@ -13,7 +13,82 @@
     "devHint": "Для отримання Telegram ID напишіть @userinfobot в Telegram",
     "returnToTelegram": "Повернутися до Telegram Login",
     "error": "Помилка авторизації",
-    "checkId": "Перевірте чи правильний Telegram ID"
+    "checkId": "Перевірте чи правильний Telegram ID",
+    "registerLink": "Немає аккаунта? Зареєструватися",
+    "forgotPasswordLink": "Забули пароль?",
+    "setPasswordLink": "Встановити пароль для існуючого аккаунта",
+    "passwordPlaceholder": "Введіть пароль",
+    "loggingIn": "Вхід...",
+    "loginButton": "Увійти"
+  },
+  "register": {
+    "title": "Реєстрація",
+    "subtitle": "Створити новий аккаунт",
+    "telegramId": "Telegram ID",
+    "telegramIdPlaceholder": "Введіть ваш Telegram ID",
+    "telegramIdHint": "Дізнайтеся свій ID через бота: /id",
+    "password": "Пароль",
+    "passwordPlaceholder": "Мінімум 6 символів",
+    "confirmPassword": "Підтвердіть пароль",
+    "confirmPasswordPlaceholder": "Повторіть пароль",
+    "registerButton": "Зареєструватися",
+    "registering": "Реєстрація...",
+    "loginLink": "Вже є аккаунт? Увійти",
+    "errors": {
+      "mismatch": "Паролі не співпадають",
+      "tooShort": "Пароль повинен містити мінімум 6 символів",
+      "registrationFailed": "Помилка реєстрації",
+      "userExists": "Користувач вже існує. Будь ласка, увійдіть."
+    }
+  },
+  "forgotPassword": {
+    "title": "Відновлення пароля",
+    "subtitle": "Відновити доступ до аккаунта",
+    "telegramId": "Telegram ID",
+    "telegramIdPlaceholder": "Введіть ваш Telegram ID",
+    "requestCode": "Отримати код",
+    "sending": "Відправка...",
+    "useOldPassword": "Використати старий пароль",
+    "oldPassword": "Старий пароль",
+    "oldPasswordPlaceholder": "Введіть старий пароль",
+    "resetCode": "Код відновлення",
+    "resetCodePlaceholder": "Введіть код з Telegram",
+    "resetCodeHint": "Код надіслано ботом в особисті повідомлення",
+    "newPassword": "Новий пароль",
+    "newPasswordPlaceholder": "Мінімум 6 символів",
+    "confirmPassword": "Підтвердіть пароль",
+    "confirmPasswordPlaceholder": "Повторіть новий пароль",
+    "resetButton": "Відновити пароль",
+    "resetting": "Відновлення...",
+    "requestNewCode": "Запросити новий код",
+    "backToLogin": "Повернутися до входу",
+    "codeSent": "Код надіслано в Telegram. Перевірте повідомлення від бота.",
+    "passwordReset": "Пароль успішно відновлено. Тепер ви можете увійти.",
+    "errors": {
+      "mismatch": "Паролі не співпадають",
+      "tooShort": "Пароль повинен містити мінімум 6 символів",
+      "resetFailed": "Помилка відновлення пароля"
+    }
+  },
+  "setPassword": {
+    "title": "Встановлення пароля",
+    "subtitle": "Встановити пароль для вашого аккаунта",
+    "telegramId": "Telegram ID",
+    "telegramIdPlaceholder": "Введіть ваш Telegram ID",
+    "telegramIdHint": "Дізнайтеся свій ID через бота: /id",
+    "password": "Пароль",
+    "passwordPlaceholder": "Мінімум 6 символів",
+    "confirmPassword": "Підтвердіть пароль",
+    "confirmPasswordPlaceholder": "Повторіть пароль",
+    "setButton": "Встановити пароль",
+    "setting": "Встановлення...",
+    "backToLogin": "Повернутися до входу",
+    "errors": {
+      "telegramIdRequired": "Введіть Telegram ID",
+      "mismatch": "Паролі не співпадають",
+      "tooShort": "Пароль повинен містити мінімум 6 символів",
+      "setFailed": "Помилка встановлення пароля"
+    }
   },
   "dashboard": {
     "title": "Tavern Bot",
@@ -100,7 +175,32 @@
     "searchTimezone": "Пошук часового поясу...",
     "account": "Акаунт",
     "logout": "Вийти",
-    "logoutConfirm": "Ви впевнені, що хочете вийти?"
+    "logoutConfirm": "Ви впевнені, що хочете вийти?",
+    "security": "Безпека",
+    "changePassword": "Змінити пароль",
+    "oldPassword": "Старий пароль",
+    "oldPasswordPlaceholder": "Введіть старий пароль",
+    "newPassword": "Новий пароль",
+    "newPasswordPlaceholder": "Введіть новий пароль (мін. 6 символів)",
+    "confirmPassword": "Підтвердіть пароль",
+    "confirmPasswordPlaceholder": "Повторіть новий пароль",
+    "passwordChanged": "Пароль успішно змінено",
+    "resetPassword": "Відновити пароль через Telegram",
+    "resetPasswordDescription": "Запитайте код відновлення у Telegram боті",
+    "requestCode": "Запросити код",
+    "resetCode": "Код відновлення",
+    "resetCodePlaceholder": "Введіть код з Telegram",
+    "codeSent": "Код надіслано в Telegram. Перевірте повідомлення від бота.",
+    "passwordReset": "Пароль успішно відновлено",
+    "passwordErrors": {
+      "mismatch": "Паролі не співпадають",
+      "tooShort": "Пароль повинен містити мінімум 6 символів",
+      "oldRequired": "Старий пароль обов'язковий",
+      "changeFailed": "Помилка зміни пароля",
+      "resetFailed": "Помилка відновлення пароля",
+      "codeRequired": "Код відновлення обов'язковий",
+      "invalidCode": "Невірний або застарілий код відновлення"
+    }
   },
   "characters": {
     "title": "Персонажі",
