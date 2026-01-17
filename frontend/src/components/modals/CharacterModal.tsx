@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useLanguage } from '../context/LanguageContext';
-import type { Character } from '../api/characters';
+import { useLanguage } from '../../context/LanguageContext';
+import type { Character } from '../../api/characters';
 import './CharacterModal.css';
 
 interface CharacterModalProps {
@@ -31,7 +31,20 @@ const CharacterModal = ({ isOpen, onClose, onSave, character, mode }: CharacterM
         setLevel('');
       }
       setError('');
+      // Block scroll when modal is open
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+    } else {
+      // Restore scroll when modal is closed
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
     }
+
+    return () => {
+      // Ensure scroll is restored on unmount
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    };
   }, [isOpen, mode, character]);
 
   if (!isOpen) return null;

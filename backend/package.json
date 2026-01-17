@@ -9,6 +9,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "seed": "tsx src/scripts/seedInstances.ts",
+    "seed:users": "tsx src/scripts/seedUsers.ts",
     "lint": "eslint . --ext ts --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint . --ext ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",

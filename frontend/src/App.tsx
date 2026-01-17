@@ -1,14 +1,9 @@
 import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
-import BottomNav from './components/BottomNav';
-import Dashboard from './components/Dashboard';
-import ErrorBoundary from './components/ErrorBoundary';
-import Header from './components/Header';
-import Login from './components/Login';
-import Profile from './components/Profile';
-import Settings from './components/Settings';
-import Statistics from './components/Statistics';
+import { BottomNav, Header } from './components/layout';
+import { ErrorBoundary } from './components/ui';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
+import { Dashboard, Login, Profile, Settings, Statistics } from './pages';
 import './App.css';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {

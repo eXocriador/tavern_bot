@@ -90,7 +90,8 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--spacing-md);
-  margin-top: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
+  width: 100%;
 }
 
 .stat-compact {
@@ -279,7 +280,7 @@
 
 .instance-card {
   background: linear-gradient(135deg, var(--bg-panel) 0%, var(--bg-tertiary) 50%, var(--bg-secondary) 100%);
-  padding: var(--spacing-xs) var(--spacing-sm);
+  padding: var(--spacing-sm);
   border-radius: var(--radius-md);
   margin-bottom: var(--spacing-sm);
   display: flex;
@@ -290,9 +291,7 @@
   transition: all var(--transition-base);
   border: 2px solid var(--border-bronze);
   position: relative;
-  min-height: 36px;
   width: 100%;
-  gap: var(--spacing-sm);
 }
 
 .instance-card:hover {
@@ -361,6 +360,8 @@
   overflow: hidden;
   display: flex;
   align-items: center;
+  margin: 0;
+  padding: 0;
 }
 
 .instance-info h3 {
@@ -414,6 +415,8 @@
   z-index: 10;
   flex-shrink: 0;
   flex-grow: 0;
+  margin: 0;
+  padding: 0;
 }
 
 .btn-visit-toggle,
@@ -435,6 +438,7 @@
   position: relative;
   z-index: 11;
   pointer-events: auto;
+  margin: 0;
 }
 
 .btn-create-party:hover,
@@ -492,6 +496,14 @@
   opacity: 0.6;
   cursor: not-allowed;
   transform: none !important;
+}
+
+.btn-visit-toggle-dimmed {
+  opacity: 0.4;
+}
+
+.btn-visit-toggle-dimmed:hover {
+  opacity: 0.7;
 }
 
 .btn-visit {
@@ -603,8 +615,29 @@
   .instance-card {
     flex-direction: row;
     align-items: center;
-    padding: var(--spacing-xs) var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-sm);
     gap: var(--spacing-sm);
+    min-height: 52px;
+  }
+
+  .instance-info h3 {
+    font-size: 1rem;
+  }
+
+  .instance-actions {
+    gap: var(--spacing-sm);
+  }
+
+  .btn-visit-toggle,
+  .btn-create-party {
+    width: 44px;
+    height: 44px;
+  }
+
+  .btn-visit-toggle svg,
+  .btn-create-party svg {
+    width: 22px;
+    height: 22px;
   }
 
   .btn-visit {

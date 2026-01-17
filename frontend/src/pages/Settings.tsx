@@ -2,19 +2,10 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { getProfile, updateProfile } from '../api/profile';
-import LanguageSwitcher from './LanguageSwitcher';
-import LogoutConfirmModal from './LogoutConfirmModal';
+import LanguageSwitcher from '../components/ui/LanguageSwitcher';
+import TimezoneSelector from '../components/ui/TimezoneSelector';
+import LogoutConfirmModal from '../components/modals/LogoutConfirmModal';
 import './Settings.css';
-
-const TIMEZONES = [
-  { value: 'UTC', label: 'UTC (Coordinated Universal Time)' },
-  { value: 'Europe/Kiev', label: 'Europe/Kiev (EET)' },
-  { value: 'Europe/Moscow', label: 'Europe/Moscow (MSK)' },
-  { value: 'Europe/London', label: 'Europe/London (GMT)' },
-  { value: 'America/New_York', label: 'America/New_York (EST)' },
-  { value: 'America/Los_Angeles', label: 'America/Los_Angeles (PST)' },
-  { value: 'Asia/Tokyo', label: 'Asia/Tokyo (JST)' },
-];
 
 const Settings = () => {
   const { logout } = useAuth();
@@ -98,18 +89,11 @@ const Settings = () => {
 
               <div className="settings-section">
                 <h3>{t('settings.timezone')}</h3>
-                <select
+                <TimezoneSelector
                   value={timezone}
-                  onChange={(e) => handleTimezoneChange(e.target.value)}
-                  className="timezone-select"
+                  onChange={handleTimezoneChange}
                   disabled={saving}
-                >
-                  {TIMEZONES.map((tz) => (
-                    <option key={tz.value} value={tz.value}>
-                      {tz.label}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
             </>
           )}

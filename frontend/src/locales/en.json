@@ -95,6 +95,8 @@
   "settings": {
     "title": "Settings",
     "language": "Interface Language",
+    "timezone": "Timezone",
+    "searchTimezone": "Search timezone...",
     "account": "Account",
     "logout": "Logout",
     "logoutConfirm": "Are you sure you want to logout?"
@@ -151,6 +153,14 @@
     "deleting": "Deleting...",
     "loggingOut": "Logging out...",
     "close": "Close",
-    "ok": "OK"
+    "ok": "OK",
+    "add": "Add",
+    "remove": "Remove"
+  },
+  "error": {
+    "title": "Something went wrong",
+    "message": "An unexpected error occurred",
+    "hint": "Please refresh the page to continue. If the problem persists, contact support.",
+    "reload": "Reload Page"
   }
 }

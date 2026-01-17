@@ -28,6 +28,7 @@ export interface CreatePartyData {
   readyTime: string;
   invitedUserIds: string[];
   selectedCharacterIds?: { [userId: string]: string };
+  selectedNicknames?: { [userId: string]: string };
 }
 
 export const createParty = async (data: CreatePartyData): Promise<Party> => {

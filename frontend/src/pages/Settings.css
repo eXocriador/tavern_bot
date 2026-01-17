@@ -119,35 +119,6 @@
   filter: drop-shadow(0 0 4px var(--shadow-gold));
 }
 
-.timezone-select {
-  width: 100%;
-  padding: var(--spacing-md);
-  border: 2px solid var(--border-bronze);
-  border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--bg-panel) 0%, var(--bg-secondary) 100%);
-  color: var(--text-primary);
-  font-size: 1rem;
-  font-family: 'Crimson Text', 'Georgia', serif;
-  cursor: pointer;
-  transition: all var(--transition-base);
-  box-shadow: var(--shadow-debossed);
-}
-
-.timezone-select:focus {
-  outline: none;
-  border-color: var(--border-gold);
-  box-shadow: var(--shadow-debossed), 0 0 0 3px rgba(212, 175, 55, 0.2), var(--shadow-glow);
-}
-
-.timezone-select:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.timezone-select option {
-  background: var(--bg-panel);
-  color: var(--text-primary);
-}
 
 @media (max-width: 768px) {
   .settings-main {

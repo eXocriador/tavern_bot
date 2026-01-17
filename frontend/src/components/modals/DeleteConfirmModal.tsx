@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useLanguage } from '../context/LanguageContext';
+import { useState, useEffect } from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 import './DeleteConfirmModal.css';
 
 interface DeleteConfirmModalProps {
@@ -12,6 +12,24 @@ interface DeleteConfirmModalProps {
 const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, characterName }: DeleteConfirmModalProps) => {
   const { t } = useLanguage();
   const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      // Block scroll when modal is open
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+    } else {
+      // Restore scroll when modal is closed
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      // Ensure scroll is restored on unmount
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

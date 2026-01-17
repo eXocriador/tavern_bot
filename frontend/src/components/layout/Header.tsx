@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useLanguage } from '../context/LanguageContext';
+import { useLanguage } from '../../context/LanguageContext';
 import './Header.css';
 
 const Header = () => {

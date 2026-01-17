@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useLanguage } from '../context/LanguageContext';
+import { useState, useEffect } from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 import './LogoutConfirmModal.css';
 
 interface LogoutConfirmModalProps {
@@ -11,6 +11,24 @@ interface LogoutConfirmModalProps {
 const LogoutConfirmModal = ({ isOpen, onClose, onConfirm }: LogoutConfirmModalProps) => {
   const { t } = useLanguage();
   const [loggingOut, setLoggingOut] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      // Block scroll when modal is open
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+    } else {
+      // Restore scroll when modal is closed
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      // Ensure scroll is restored on unmount
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
