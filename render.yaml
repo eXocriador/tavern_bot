@@ -4,7 +4,7 @@ services:
     name: tavern-bot-backend
     env: node
     plan: free
-    # For monorepo: install from root, then build backend
+    # For monorepo: install from root (workspaces handle deps), then build
     buildCommand: yarn install && yarn workspace tavern-bot-backend build
     startCommand: yarn workspace tavern-bot-backend start
     envVars:
