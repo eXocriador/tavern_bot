@@ -35,8 +35,10 @@ if (!mongoUri) {
 mongoose
   .connect(mongoUri)
   .then(() => {
-    console.log('Connected to MongoDB');
     setupCronJobs();
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
   })
   .catch(error => {
     console.error('MongoDB connection failed:', error.message);
@@ -57,8 +59,4 @@ app.use('/api/users', userRoutes);
 // Health check
 app.get('/health', (_, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
 });

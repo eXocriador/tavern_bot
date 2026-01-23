@@ -15,11 +15,14 @@ RUN yarn workspace tavern-bot-telegram build
 FROM base AS backend
 WORKDIR /app
 RUN yarn workspace tavern-bot-backend build
-EXPOSE 5001
+RUN apk add --no-cache curl
+EXPOSE 3333
 CMD ["yarn", "workspace", "tavern-bot-backend", "start"]
 
 FROM base AS frontend
 WORKDIR /app
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
 RUN yarn workspace tavern-bot-frontend build
 FROM nginx:alpine
 COPY --from=frontend /app/frontend/dist /usr/share/nginx/html

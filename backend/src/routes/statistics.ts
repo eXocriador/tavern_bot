@@ -118,7 +118,7 @@ router.get('/user/:telegramId', async (req: express.Request, res: Response) => {
 });
 
 // Get global statistics
-router.get('/global', async (req: express.Request, res: Response) => {
+router.get('/global', async (_, res: Response) => {
   try {
     const periodId = await getCurrentPeriod();
     const allInstances = await InstanceZone.find();
@@ -128,15 +128,12 @@ router.get('/global', async (req: express.Request, res: Response) => {
 
     // Zone popularity
     const zoneVisitCounts = new Map<string, number>();
-    console.log('Processing visits:', allVisits.length, 'visits');
     allVisits.forEach((visit, index) => {
       try {
         if (visit.zoneId) {
           // Handle ObjectId properly
           const zoneId = visit.zoneId.toString();
           zoneVisitCounts.set(zoneId, (zoneVisitCounts.get(zoneId) || 0) + 1);
-        } else {
-          console.log('Visit has null zoneId:', visit);
         }
       } catch (error) {
         console.error('Error processing visit:', visit, error);
@@ -153,10 +150,8 @@ router.get('/global', async (req: express.Request, res: Response) => {
 
     // All-time zone popularity (from UserZoneStats)
     const allTimeZoneCounts = new Map<string, number>();
-    console.log('Processing allStats:', allStats.length, 'stats');
     allStats.forEach((stat, index) => {
       try {
-        console.log(`Stat ${index}:`, stat);
         const zoneId = (stat.zoneId as any)?._id?.toString() || stat.zoneId.toString();
         allTimeZoneCounts.set(zoneId, (allTimeZoneCounts.get(zoneId) || 0) + stat.totalVisits);
       } catch (error) {
