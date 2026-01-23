@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
 import apiClient from '../api/axiosConfig';
 
 interface User {
@@ -6,14 +6,12 @@ interface User {
   username?: string;
   firstName?: string;
   lastName?: string;
-  characterName?: string;
-  characterLevel?: number;
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (authData: any) => Promise<void>;
+  login: (authData: Record<string, unknown>) => Promise<void>;
   logout: () => void;
   updateUser: (user: User) => void;
 }
@@ -74,4 +72,3 @@ export const useAuth = () => {
   }
   return context;
 };
-

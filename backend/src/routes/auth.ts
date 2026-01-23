@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import express, { type Response } from 'express';
 import { type AuthRequest, verifyTelegramAuth } from '../middleware/auth';
+import Character from '../models/Character';
 import User from '../models/User';
 
 const router = express.Router();
@@ -33,7 +34,6 @@ router.post('/register', async (req: express.Request, res: Response) => {
         username: user.username,
         firstName: user.firstName,
         lastName: user.lastName,
-        characterName: user.characterName,
       },
     });
   } catch (error) {
@@ -56,7 +56,6 @@ router.post('/telegram', verifyTelegramAuth, async (req: AuthRequest, res: Respo
         username: user.username,
         firstName: user.firstName,
         lastName: user.lastName,
-        characterName: user.characterName,
       },
     });
   } catch {
@@ -170,6 +169,17 @@ router.post('/webapp', async (req: express.Request, res: Response) => {
       await user.save();
     }
 
+    // Create default character if doesn't exist
+    const existingCharacter = await Character.findOne({ userId: user._id });
+    if (!existingCharacter) {
+      await Character.create({
+        userId: user._id,
+        nickname: userData.username || `User${userData.id}`,
+        profession: 'Adventurer',
+        level: 1,
+      });
+    }
+
     res.json({
       success: true,
       user: {
@@ -177,7 +187,6 @@ router.post('/webapp', async (req: express.Request, res: Response) => {
         username: user.username,
         firstName: user.firstName,
         lastName: user.lastName,
-        characterName: user.characterName,
       },
     });
   } catch {

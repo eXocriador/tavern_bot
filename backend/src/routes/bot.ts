@@ -1,4 +1,5 @@
 import express, { type Request, type Response } from 'express';
+import Character from '../models/Character';
 import InstanceZone from '../models/InstanceZone';
 import User from '../models/User';
 import UserZoneStats from '../models/UserZoneStats';
@@ -207,8 +208,6 @@ router.get('/user/:telegramId', async (req: Request, res: Response) => {
       username: user.username,
       firstName: user.firstName,
       lastName: user.lastName,
-      characterName: user.characterName,
-      characterLevel: user.characterLevel,
     });
   } catch (error) {
     console.error('Get bot user error:', error);
@@ -232,12 +231,23 @@ router.put('/user/:telegramId/level', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Level must be between 1 and 100' });
     }
 
-    user.characterLevel = level;
-    await user.save();
+    // Find or create character for user
+    let character = await Character.findOne({ userId: user._id });
+    if (!character) {
+      character = await Character.create({
+        userId: user._id,
+        nickname: user.username || `User${user.telegramId}`,
+        profession: 'Adventurer',
+        level: 1,
+      });
+    }
+
+    character.level = level;
+    await character.save();
 
     res.json({
       telegramId: user.telegramId,
-      characterLevel: user.characterLevel,
+      characterLevel: character.level,
     });
   } catch (error) {
     console.error('Update bot user level error:', error);
@@ -270,15 +280,29 @@ router.get('/top-players', async (req: Request, res: Response) => {
         },
       },
       {
+        $lookup: {
+          from: 'characters',
+          localField: '_id',
+          foreignField: 'userId',
+          as: 'character',
+        },
+      },
+      {
         $unwind: '$user',
+      },
+      {
+        $unwind: {
+          path: '$character',
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $project: {
           _id: 0,
           telegramId: '$user.telegramId',
           username: '$user.username',
-          characterName: '$user.characterName',
-          characterLevel: '$user.characterLevel',
+          characterName: '$character.nickname',
+          characterLevel: '$character.level',
           totalVisits: 1,
         },
       },

@@ -96,7 +96,6 @@ router.get('/user/:telegramId', async (req: express.Request, res: Response) => {
       user: {
         telegramId: user.telegramId,
         username: user.username,
-        characterName: user.characterName,
       },
       currentPeriod: {
         visited: userVisits.length,
