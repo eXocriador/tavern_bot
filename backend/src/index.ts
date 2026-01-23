@@ -1,18 +1,18 @@
-import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import express from 'express';
 import mongoose from 'mongoose';
 import { setupCronJobs } from './cron/resetInstances';
+import { devAuth } from './middleware/auth';
 import authRoutes from './routes/auth';
-import instanceRoutes from './routes/instances';
-import visitRoutes from './routes/visits';
-import profileRoutes from './routes/profile';
-import statisticsRoutes from './routes/statistics';
 import botRoutes from './routes/bot';
 import characterRoutes from './routes/characters';
+import instanceRoutes from './routes/instances';
 import partyRoutes from './routes/parties';
+import profileRoutes from './routes/profile';
+import statisticsRoutes from './routes/statistics';
 import userRoutes from './routes/users';
-import { devAuth } from './middleware/auth';
+import visitRoutes from './routes/visits';
 
 dotenv.config();
 
@@ -28,22 +28,18 @@ app.use(devAuth);
 // Connect to MongoDB
 const mongoUri = process.env.MONGODB_URI;
 if (!mongoUri) {
-  console.error('❌ MONGODB_URI environment variable is not set!');
-  console.error('Please set MONGODB_URI in Render Dashboard → Environment');
+  console.error('MONGODB_URI environment variable is not set');
   process.exit(1);
 }
 
 mongoose
   .connect(mongoUri)
   .then(() => {
-    console.log('✅ Connected to MongoDB');
-
-    // Setup cron jobs after DB connection
+    console.log('Connected to MongoDB');
     setupCronJobs();
   })
-  .catch((error) => {
-    console.error('❌ MongoDB connection error:', error);
-    console.error('MongoDB URI:', mongoUri ? `${mongoUri.substring(0, 20)}...` : 'NOT SET');
+  .catch(error => {
+    console.error('MongoDB connection failed:', error.message);
     process.exit(1);
   });
 
@@ -59,11 +55,10 @@ app.use('/api/parties', partyRoutes);
 app.use('/api/users', userRoutes);
 
 // Health check
-app.get('/health', (req, res) => {
+app.get('/health', (_, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
-

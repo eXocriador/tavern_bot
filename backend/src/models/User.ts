@@ -1,5 +1,5 @@
-import mongoose, { Schema, Document } from 'mongoose';
 import bcrypt from 'bcryptjs';
+import mongoose, { type Document, Schema } from 'mongoose';
 
 export interface IUser extends Document {
   telegramId: number;
@@ -50,14 +50,10 @@ const UserSchema = new Schema<IUser>({
 });
 
 // Hash password before saving
-UserSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) {
-    return next();
-  }
-  if (this.password) {
+UserSchema.pre('save', async function () {
+  if (this.isModified('password') && this.password) {
     this.password = await bcrypt.hash(this.password, 10);
   }
-  next();
 });
 
 // Method to compare password
@@ -67,6 +63,4 @@ UserSchema.methods.comparePassword = async function (candidatePassword: string):
   }
   return bcrypt.compare(candidatePassword, this.password);
 };
-
 export default mongoose.model<IUser>('User', UserSchema);
-

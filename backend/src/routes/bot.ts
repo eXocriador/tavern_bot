@@ -1,8 +1,8 @@
-import express, { Request, Response } from 'express';
-import Visit from '../models/Visit';
+import express, { type Request, type Response } from 'express';
 import InstanceZone from '../models/InstanceZone';
 import User from '../models/User';
 import UserZoneStats from '../models/UserZoneStats';
+import Visit from '../models/Visit';
 import { getCurrentPeriod } from '../utils/period';
 
 const router = express.Router();
@@ -45,7 +45,9 @@ router.post('/ensure-user', async (req: Request, res: Response) => {
 // Get visits for user by telegramId
 router.get('/visits/:telegramId', async (req: Request, res: Response) => {
   try {
-    const user = await User.findOne({ telegramId: parseInt(req.params.telegramId) });
+    const user = await User.findOne({
+      telegramId: parseInt(req.params.telegramId as string),
+    });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -66,7 +68,9 @@ router.get('/visits/:telegramId', async (req: Request, res: Response) => {
 // Mark visit by telegramId and zoneId
 router.post('/visits/:telegramId/:zoneId', async (req: Request, res: Response) => {
   try {
-    const user = await User.findOne({ telegramId: parseInt(req.params.telegramId) });
+    const user = await User.findOne({
+      telegramId: parseInt(req.params.telegramId as string),
+    });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -131,7 +135,9 @@ router.post('/visits/:telegramId/:zoneId', async (req: Request, res: Response) =
 // Remove visit by telegramId and zoneId
 router.delete('/visits/:telegramId/:zoneId', async (req: Request, res: Response) => {
   try {
-    const user = await User.findOne({ telegramId: parseInt(req.params.telegramId) });
+    const user = await User.findOne({
+      telegramId: parseInt(req.params.telegramId as string),
+    });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -189,7 +195,9 @@ router.delete('/visits/:telegramId/:zoneId', async (req: Request, res: Response)
 // Get user by telegramId
 router.get('/user/:telegramId', async (req: Request, res: Response) => {
   try {
-    const user = await User.findOne({ telegramId: parseInt(req.params.telegramId) });
+    const user = await User.findOne({
+      telegramId: parseInt(req.params.telegramId as string),
+    });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -212,7 +220,9 @@ router.get('/user/:telegramId', async (req: Request, res: Response) => {
 router.put('/user/:telegramId/level', async (req: Request, res: Response) => {
   try {
     const { level } = req.body;
-    const user = await User.findOne({ telegramId: parseInt(req.params.telegramId) });
+    const user = await User.findOne({
+      telegramId: parseInt(req.params.telegramId as string),
+    });
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
@@ -264,6 +274,7 @@ router.get('/top-players', async (req: Request, res: Response) => {
       },
       {
         $project: {
+          _id: 0,
           telegramId: '$user.telegramId',
           username: '$user.username',
           characterName: '$user.characterName',
@@ -281,4 +292,3 @@ router.get('/top-players', async (req: Request, res: Response) => {
 });
 
 export default router;
-

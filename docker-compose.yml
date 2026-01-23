@@ -1,0 +1,78 @@
+version: "3.8"
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: tavern-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: tavern_bot
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    ports:
+      - "27017:27017"
+    networks:
+      - tavern-network
+
+  backend:
+    build:
+      context: .
+      target: backend
+    container_name: tavern-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 5001
+      MONGODB_URI: mongodb://admin:${MONGO_ROOT_PASSWORD}@mongodb:27017/tavern_bot?authSource=admin
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID}
+    depends_on:
+      - mongodb
+    ports:
+      - "5001:5001"
+    networks:
+      - tavern-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: .
+      target: frontend
+    container_name: tavern-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - tavern-network
+
+  telegram-bot:
+    build:
+      context: .
+      target: telegram-bot
+    container_name: tavern-telegram-bot
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      API_URL: http://backend:5001/api
+    depends_on:
+      - backend
+    networks:
+      - tavern-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  tavern-network:
+    driver: bridge

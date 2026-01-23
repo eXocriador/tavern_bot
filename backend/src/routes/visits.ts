@@ -1,9 +1,9 @@
-import express, { Response } from 'express';
-import { requireAuth, AuthRequest } from '../middleware/auth';
-import Visit from '../models/Visit';
+import express, { type Response } from 'express';
+import { type AuthRequest, requireAuth } from '../middleware/auth';
 import InstanceZone from '../models/InstanceZone';
 import User from '../models/User';
 import UserZoneStats from '../models/UserZoneStats';
+import Visit from '../models/Visit';
 import { getCurrentPeriod } from '../utils/period';
 
 const router = express.Router();
@@ -27,7 +27,9 @@ router.get('/me', requireAuth, async (req: AuthRequest, res: Response) => {
 // Get visits for specific user
 router.get('/user/:telegramId', async (req: express.Request, res: Response) => {
   try {
-    const user = await User.findOne({ telegramId: parseInt(req.params.telegramId) });
+    const user = await User.findOne({
+      telegramId: parseInt(req.params.telegramId as string),
+    });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -159,4 +161,3 @@ router.delete('/:zoneId', requireAuth, async (req: AuthRequest, res: Response) =
 });
 
 export default router;
-

@@ -1,10 +1,10 @@
-import express, { Response } from 'express';
-import { requireAuth, AuthRequest } from '../middleware/auth';
-import Visit from '../models/Visit';
-import User from '../models/User';
+import express, { type Response } from 'express';
+import { type AuthRequest, requireAuth } from '../middleware/auth';
 import InstanceZone from '../models/InstanceZone';
+import User from '../models/User';
 import UserZoneStats from '../models/UserZoneStats';
-import { getCurrentPeriod, getAllPeriods } from '../utils/period';
+import Visit from '../models/Visit';
+import { getAllPeriods, getCurrentPeriod } from '../utils/period';
 
 const router = express.Router();
 
@@ -24,22 +24,19 @@ router.get('/me', requireAuth, async (req: AuthRequest, res: Response) => {
 
     const visitedZoneIds = new Set(
       myVisits
-        .filter((v) => v.zoneId)
-        .map((v) => {
+        .filter(v => v.zoneId)
+        .map(v => {
           // After populate, zoneId is an object with _id property
           const zoneIdObj = v.zoneId as any;
           return zoneIdObj?._id?.toString() || null;
         })
         .filter((id): id is string => id !== null)
     );
-    const availableZones = allInstances.filter(
-      (zone) => !visitedZoneIds.has(zone._id.toString())
-    );
+    const availableZones = allInstances.filter(zone => !visitedZoneIds.has(zone._id.toString()));
 
     const totalVisits = myStats.reduce((sum, stat) => sum + stat.totalVisits, 0);
-    const completionRate = allInstances.length > 0
-      ? (myVisits.length / allInstances.length) * 100
-      : 0;
+    const completionRate =
+      allInstances.length > 0 ? (myVisits.length / allInstances.length) * 100 : 0;
 
     res.json({
       currentPeriod: {
@@ -52,9 +49,7 @@ router.get('/me', requireAuth, async (req: AuthRequest, res: Response) => {
       allTime: {
         totalVisits,
         zoneStats: myStats,
-        mostVisited: myStats
-          .sort((a, b) => b.totalVisits - a.totalVisits)
-          .slice(0, 5),
+        mostVisited: myStats.sort((a, b) => b.totalVisits - a.totalVisits).slice(0, 5),
       },
     });
   } catch (error) {
@@ -66,7 +61,7 @@ router.get('/me', requireAuth, async (req: AuthRequest, res: Response) => {
 // Get statistics for specific user
 router.get('/user/:telegramId', async (req: express.Request, res: Response) => {
   try {
-    const user = await User.findOne({ telegramId: parseInt(req.params.telegramId) });
+    const user = await User.findOne({ telegramId: parseInt(req.params.telegramId as string) });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -84,21 +79,18 @@ router.get('/user/:telegramId', async (req: express.Request, res: Response) => {
 
     const visitedZoneIds = new Set(
       userVisits
-        .filter((v) => v.zoneId)
-        .map((v) => {
+        .filter(v => v.zoneId)
+        .map(v => {
           const zoneIdObj = v.zoneId as any;
           return zoneIdObj?._id?.toString() || null;
         })
         .filter((id): id is string => id !== null)
     );
-    const availableZones = allInstances.filter(
-      (zone) => !visitedZoneIds.has(zone._id.toString())
-    );
+    const availableZones = allInstances.filter(zone => !visitedZoneIds.has(zone._id.toString()));
 
     const totalVisits = userStats.reduce((sum, stat) => sum + stat.totalVisits, 0);
-    const completionRate = allInstances.length > 0
-      ? (userVisits.length / allInstances.length) * 100
-      : 0;
+    const completionRate =
+      allInstances.length > 0 ? (userVisits.length / allInstances.length) * 100 : 0;
 
     res.json({
       user: {
@@ -116,9 +108,7 @@ router.get('/user/:telegramId', async (req: express.Request, res: Response) => {
       allTime: {
         totalVisits,
         zoneStats: userStats,
-        mostVisited: userStats
-          .sort((a, b) => b.totalVisits - a.totalVisits)
-          .slice(0, 5),
+        mostVisited: userStats.sort((a, b) => b.totalVisits - a.totalVisits).slice(0, 5),
       },
     });
   } catch (error) {
@@ -138,38 +128,56 @@ router.get('/global', async (req: express.Request, res: Response) => {
 
     // Zone popularity
     const zoneVisitCounts = new Map<string, number>();
-    allVisits.forEach((visit) => {
-      const zoneId = visit.zoneId.toString();
-      zoneVisitCounts.set(zoneId, (zoneVisitCounts.get(zoneId) || 0) + 1);
+    console.log('Processing visits:', allVisits.length, 'visits');
+    allVisits.forEach((visit, index) => {
+      try {
+        if (visit.zoneId) {
+          // Handle ObjectId properly
+          const zoneId = visit.zoneId.toString();
+          zoneVisitCounts.set(zoneId, (zoneVisitCounts.get(zoneId) || 0) + 1);
+        } else {
+          console.log('Visit has null zoneId:', visit);
+        }
+      } catch (error) {
+        console.error('Error processing visit:', visit, error);
+      }
     });
 
-    const zonePopularity = allInstances.map((zone) => ({
-      zoneId: zone.zoneId,
-      name: zone.name,
-      visits: zoneVisitCounts.get(zone._id.toString()) || 0,
-    })).sort((a, b) => b.visits - a.visits);
+    const zonePopularity = allInstances
+      .map(zone => ({
+        zoneId: zone.zoneId,
+        name: zone.name,
+        visits: zoneVisitCounts.get(zone._id.toString()) || 0,
+      }))
+      .sort((a, b) => b.visits - a.visits);
 
     // All-time zone popularity (from UserZoneStats)
     const allTimeZoneCounts = new Map<string, number>();
-    allStats.forEach((stat) => {
-      const zoneId = (stat.zoneId as any)?._id?.toString() || stat.zoneId.toString();
-      allTimeZoneCounts.set(zoneId, (allTimeZoneCounts.get(zoneId) || 0) + stat.totalVisits);
+    console.log('Processing allStats:', allStats.length, 'stats');
+    allStats.forEach((stat, index) => {
+      try {
+        console.log(`Stat ${index}:`, stat);
+        const zoneId = (stat.zoneId as any)?._id?.toString() || stat.zoneId.toString();
+        allTimeZoneCounts.set(zoneId, (allTimeZoneCounts.get(zoneId) || 0) + stat.totalVisits);
+      } catch (error) {
+        console.error('Error processing stat:', stat, error);
+      }
     });
 
-    const allTimeZonePopularity = allInstances.map((zone) => ({
-      zoneId: zone.zoneId,
-      name: zone.name,
-      visits: allTimeZoneCounts.get(zone._id.toString()) || 0,
-    })).sort((a, b) => b.visits - a.visits);
+    const allTimeZonePopularity = allInstances
+      .map(zone => ({
+        zoneId: zone.zoneId,
+        name: zone.name,
+        visits: allTimeZoneCounts.get(zone._id.toString()) || 0,
+      }))
+      .sort((a, b) => b.visits - a.visits);
 
     // Active users count
-    const activeUserIds = new Set(allVisits.map((v) => v.userId.toString()));
+    const activeUserIds = new Set(allVisits.map(v => v.userId?.toString()).filter(Boolean));
     const activeUsersCount = activeUserIds.size;
 
     // Average visits per user
-    const avgVisits = activeUsersCount > 0
-      ? allVisits.length / activeUsersCount
-      : 0;
+    const avgVisits = activeUsersCount > 0 ? allVisits.length / activeUsersCount : 0;
 
     res.json({
       currentPeriod: {
@@ -219,7 +227,7 @@ router.get('/zone/:zoneId', async (req: express.Request, res: Response) => {
       },
       currentPeriod: {
         visits: zoneVisits.length,
-        visitors: zoneVisits.map((v) => ({
+        visitors: zoneVisits.map(v => ({
           telegramId: (v.userId as any).telegramId,
           username: (v.userId as any).username,
           characterName: (v.userId as any).characterName,
@@ -228,7 +236,7 @@ router.get('/zone/:zoneId', async (req: express.Request, res: Response) => {
       },
       allTime: {
         totalVisits: zoneStats.reduce((sum, stat) => sum + stat.totalVisits, 0),
-        topVisitors: zoneStats.slice(0, 10).map((stat) => ({
+        topVisitors: zoneStats.slice(0, 10).map(stat => ({
           telegramId: (stat.userId as any).telegramId,
           username: (stat.userId as any).username,
           characterName: (stat.userId as any).characterName,
@@ -255,4 +263,3 @@ router.get('/periods', async (req: express.Request, res: Response) => {
 });
 
 export default router;
-
